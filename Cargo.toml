@@ -1,0 +1,28 @@
+[package]
+name = "desox"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Paul Tagliamonte <paultag@gmail.com>"]
+repository = "https://github.com/paultag/desox-rs"
+description = "(incomplete) MIFARE DESFire EV3 APDU bindings."
+
+[features]
+default = []
+pcsc = ["dep:pcsc"]
+std = []
+
+[dependencies]
+aes = "0.9"
+cbc = "0.2"
+crc32fast = "1.5"
+des = { version = "0.9" }
+getrandom = { version = "0.4" }
+pcsc = { version = "2.9", optional = true }
+thiserror = "2.0"
+tokio = { version = "1.20", features = ["io-util", "fs"] }
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1.20", features = ["full"] }
+hex-literal = { version = "1.1" }

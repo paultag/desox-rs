@@ -1,0 +1,91 @@
+// {{{ Copyright (c) Paul R. Tagliamonte <paultag@gmail.com>, 2026
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE. }}}
+
+/// Instructions are single-byte commands followed by a well-defined
+/// amount of data. These are sent as the first byte of an APDU to the
+/// DESFire card.
+#[derive(Copy, Clone, Debug, PartialEq)]
+#[repr(u8)]
+pub enum Instruction {
+    // Control-flow instructions
+    //
+    /// Get the next hunk of data that we know is there because we just got
+    /// back a AdditionalData response code.
+    AdditionalData = 0xAF,
+
+    // Context-dependent commands. These commands have different meanings
+    // depending on an open application (or not).
+    //
+    /// Get key settings for the open Application
+    GetKeySettings = 0x45,
+
+    /// Get the key version for a Key ID
+    GetKeyVersion = 0x64,
+
+    /// Authenticate with the Card (DES)
+    AuthenticateDes = 0x1A,
+
+    /// Authenticate with the Card (AES)
+    AuthenticateAes = 0xAA,
+
+    // Instructions that are about the "global" state of the card.
+    //
+    /// Request the card version
+    GetVersionInfo = 0x60,
+
+    /// Get the installed Application IDs.
+    GetApplicationIdList = 0x6A,
+
+    /// Get the card's real UID
+    GetUid = 0x51,
+
+    /// Format the Card
+    FormatCard = 0xFC,
+
+    // Instructions that are about working with applications
+    //
+    /// Select an application
+    SelectApplication = 0x5A,
+
+    /// Create an application
+    CreateApplication = 0xCA,
+
+    /// Delete an application
+    DeleteApplication = 0xDA,
+
+    // Instructions that deal with file operations
+    //
+    /// Create a data file
+    CreateDataFile = 0xCD,
+
+    /// Write to a Data File
+    WriteDataFile = 0x3D,
+
+    /// Read to a Data File
+    ReadDataFile = 0xBD,
+
+    /// Get file settings back off the card
+    GetFileSettings = 0xF5,
+
+    /// List files in an application
+    ListFiles = 0x6F,
+}
+
+// vim: foldmethod=marker
