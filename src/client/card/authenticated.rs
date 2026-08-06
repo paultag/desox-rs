@@ -19,7 +19,7 @@
 // THE SOFTWARE. }}}
 
 use super::{AuthenticationState, Card, CardIoDefault, Unauthenticated};
-use crate::{Error, StatusCode, client::Session, io};
+use crate::{Error, KeyId, StatusCode, client::Session, io};
 
 /// Authenticated Session
 pub struct Authenticated {
@@ -65,6 +65,11 @@ impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {
+    /// Return the currently authenticated key id
+    pub fn get_current_key_id(&self) -> KeyId {
+        self.authentication.session.get_key_id()
+    }
+
     /// Drop Authentication. This doesn't actually change anything on the
     /// card state -- this is only useful if you (the user) know you did
     /// something that caused you to be "logged out" that the type system
@@ -72,13 +77,13 @@ where
     pub fn to_unauthenticated(self) -> Card<'card, IoBackendT, Unauthenticated> {
         let Self {
             card,
-            buf,
+            application_id,
             authentication: _,
         } = self;
 
         Card::<'card, IoBackendT, Unauthenticated> {
             card,
-            buf,
+            application_id,
             authentication: Unauthenticated,
         }
     }

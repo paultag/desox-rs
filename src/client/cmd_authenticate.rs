@@ -19,8 +19,11 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    Error, Key, KeyId,
-    client::{AuthenticateExt, Authenticated, AuthenticationState, Card, KeyingState, Session},
+    Error, Instruction, Key, KeyId, StatusCode, Unauthenticated,
+    client::{
+        AuthenticateExt, Authenticated, AuthenticationState, Card, KeyingState, Session,
+        command_header,
+    },
     io,
 };
 
@@ -63,14 +66,71 @@ where
 
         let Self {
             card,
-            buf,
+            application_id,
             authentication: _,
         } = self;
 
         Ok(Card {
             card,
-            buf,
+            application_id,
             authentication: Authenticated { session },
+        })
+    }
+}
+
+impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+where
+    IoBackendT: io::Backend,
+{
+    /// Change the currently authenticated key ID to something new (`new_key`).
+    pub async fn change_current_key(
+        self,
+        out: &mut [u8],
+        new_key: Key,
+        new_key_version: u8,
+    ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+        let header: &[u8] = command_header!({
+            instruction: Instruction = Instruction::ChangeKey,
+            key_id: KeyId = self.authentication.session.get_key_id()
+        });
+
+        let Self {
+            mut authentication,
+            application_id,
+            card,
+        } = self;
+
+        // We can't use command_encrypted_request here because the response
+        // isn't CMAC; it's plain (since the operation itself is what will
+        // tear down the session). As a result, we have to explicitly call
+        // encrypted_out_plain_in so we don't try to validate cmac, we are
+        // dropping the session anyway at function return.
+
+        let (status_code, response) = match (&mut authentication.session, new_key) {
+            (Session::Aes { keying, .. }, Key::Aes(key)) => {
+                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key, &[new_key_version]])
+                    .await?
+            }
+            (Session::Des { keying, .. }, Key::Des(key)) => {
+                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key]).await?
+            }
+            _ => {
+                return Err(Error::BadAlgorithm);
+            }
+        };
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode);
+        }
+
+        Ok(Card {
+            authentication: Unauthenticated,
+            application_id,
+            card,
         })
     }
 }

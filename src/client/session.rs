@@ -42,4 +42,14 @@ pub enum Session {
     },
 }
 
+impl Session {
+    /// Return the current Key ID
+    pub fn get_key_id(&self) -> KeyId {
+        match self {
+            Self::Des { key_id, keying: _ } => *key_id,
+            Self::Aes { key_id, keying: _ } => *key_id,
+        }
+    }
+}
+
 // vim: foldmethod=marker

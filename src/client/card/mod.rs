@@ -26,12 +26,12 @@ pub use authenticated::Authenticated;
 pub use default::CardIoDefault;
 pub use unauthenticated::Unauthenticated;
 
-use crate::io;
+use crate::{ApplicationId, io};
 
 /// Create a new struct for this command with an in-memory layout such that we
 /// can do tragically unsafe things with the resulting payload.
 macro_rules! command {
-    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:ident ),* ]) => {{
+    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:expr ),* ]) => {{
         let header: &[u8] = $crate::client::command_header!({
             $( $field_name: $field_type = $field_value ),*
         });
@@ -41,7 +41,7 @@ macro_rules! command {
 pub(super) use command;
 
 macro_rules! command_cmac {
-    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:ident ),* ]) => {{
+    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:expr ),* ]) => {{
         let header: &[u8] = $crate::client::command_header!({
             $( $field_name: $field_type = $field_value ),*
         });
@@ -59,17 +59,17 @@ macro_rules! command_cmac {
 pub(super) use command_cmac;
 
 macro_rules! command_encrypted_request {
-    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:ident ),* ]) => {{
+    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:expr ),* ]) => {{
         let header: &[u8] = $crate::client::command_header!({
             $( $field_name: $field_type = $field_value ),*
         });
 
         match &mut $slf.authentication.session {
             $crate::client::Session::Aes { keying, .. } => {
-                $crate::io::encrypted_out_plain_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
+                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
             },
             $crate::client::Session::Des { keying, .. } => {
-                $crate::io::encrypted_out_plain_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
+                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
             },
         }
     }};
@@ -77,7 +77,7 @@ macro_rules! command_encrypted_request {
 pub(super) use command_encrypted_request;
 
 macro_rules! command_encrypted_response {
-    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:ident ),* ]) => {{
+    ($slf:expr, $out:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, [ $( $body:expr ),* ]) => {{
         let header: &[u8] = $crate::client::command_header!({
             $( $field_name: $field_type = $field_value ),*
         });
@@ -124,7 +124,7 @@ where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
 {
-    pub(super) buf: [u8; 0xff],
+    pub(super) application_id: ApplicationId,
     pub(super) card: &'card IoBackendT,
     pub(super) authentication: AuthenticationStateT,
 }

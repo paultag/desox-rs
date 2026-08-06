@@ -27,14 +27,14 @@ impl io::Backend for ::pcsc::Card {
         // this should really be done with tokio::task::spawn_blocking but the
         // problem there is that we're operating on refs...
 
-        // #[cfg(feature = "std")]
-        // eprintln!("-> {:02x?}", input);
+        #[cfg(feature = "std")]
+        eprintln!("-> {:02x?}", input);
         let n = self.transmit(input, output)?.len();
-        // #[cfg(feature = "std")]
-        // {
-        //     let response = &output[..n];
-        //     eprintln!("<- {:02x?}", response);
-        // }
+        #[cfg(feature = "std")]
+        {
+            let response = &output[..n];
+            eprintln!("<- {:02x?}", response);
+        }
         Ok(n)
     }
 }

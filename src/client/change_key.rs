@@ -18,38 +18,4 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-//! "raw" DESFire client code. This is a fairly direct one-to-one client
-//! wrapper which is (hopefully) useful on its own, yet likely just a little
-//! more low-level than most people actually want. This is here to be an
-//! "escape hatch" when higher-level bindings are not quite cutting it.
-
-mod card;
-mod change_key;
-mod cmd_applications;
-mod cmd_authenticate;
-mod cmd_card_version;
-mod cmd_file;
-mod cmd_format_card;
-mod cmd_key;
-mod cmd_real_uid;
-mod handshake;
-mod keying;
-mod session;
-
-pub use card::{Authenticated, Card, Unauthenticated};
-pub use keying::KeyingState;
-pub use session::Session;
-
-use card::{
-    AuthenticationState, CardIoDefault, command, command_cmac, command_encrypted_request,
-    command_encrypted_response, command_header,
-};
-pub(crate) use handshake::AuthenticateExt;
-
-/// Type alias for a card which is currently unauthenticated.
-pub type UnauthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Unauthenticated>;
-
-/// Type alias for a card which is currently authenticated.
-pub type AuthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Authenticated>;
-
 // vim: foldmethod=marker

@@ -45,6 +45,9 @@ pub enum Instruction {
     /// Authenticate with the Card (AES)
     AuthenticateAes = 0xAA,
 
+    /// Change the key for a specific key slot.
+    ChangeKey = 0xC4,
+
     // Instructions that are about the "global" state of the card.
     //
     /// Request the card version

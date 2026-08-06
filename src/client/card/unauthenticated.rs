@@ -49,7 +49,7 @@ where
     pub fn new(card: &'card IoBackendT) -> Self {
         Self {
             card,
-            buf: [0; 0xff],
+            application_id: [0x00, 0x00, 0x00],
             authentication: Unauthenticated,
         }
     }

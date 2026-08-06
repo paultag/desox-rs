@@ -91,7 +91,7 @@ where
     data.push(&crc);
     let data = &data;
 
-    let (mut data, _data_len) = {
+    let (mut data, data_len) = {
         let data_len = data.iter().fold(0, |n, data| n + data.len());
         (data.iter().flat_map(|v| v.iter()), data_len)
     };
@@ -104,6 +104,39 @@ where
     let mut iv = [0; KEY_SIZE];
 
     let mut encryptor = ks.encryptor();
+
+    if data_len > 0 && command.len() + data_len <= 59 {
+        // Special case; usually what this code will do is send the header,
+        // we expect an 0xAF back, and we'll continue sending encrypted data.
+        //
+        // This is a fine assumption for writing data, but things like changing
+        // a password need to be a single command. I don't love it, but we
+        // can go ahead and just omnibus this whole thing if the command
+        // is short enough.
+
+        buf_in[..command.len()].copy_from_slice(command);
+
+        let mut buf_data = &mut buf_in[command.len()..];
+        let Some(n) = (&mut data)
+            .take(block_size)
+            .copied()
+            .copy_to_slice(&mut buf_data)
+        else {
+            unreachable!();
+        };
+
+        let block_size = if n.is_multiple_of(KEY_SIZE) {
+            n
+        } else {
+            n + KEY_SIZE - (n % KEY_SIZE)
+        };
+
+        let mut buf_data = &mut buf_data[..block_size];
+        buf_data[n..].fill(0x00);
+        encryptor.encrypt(buf_data);
+        iv = buf_data[buf_data.len() - KEY_SIZE..].try_into().unwrap();
+        command = &buf_in[..command.len() + block_size];
+    }
 
     loop {
         let (status_code, response) = backend
@@ -132,7 +165,10 @@ where
                         n + KEY_SIZE - (n % KEY_SIZE)
                     };
 
-                    // Awkwardly, not padded in the conventional way?
+                    // Awkwardly, not padded in the conventional way; likely
+                    // because the size is already known due to the
+                    // (UNENCRYPTED!) header.
+
                     let buf_data = &mut buf_in[1..(block_size + 1)];
                     buf_data[n..].fill(0x00);
                     encryptor.encrypt(buf_data);
@@ -146,11 +182,31 @@ where
             }
             _ => {
                 ks.set_iv(iv);
-                let output = ks.validate_cmac(&output[..n], Some(&[status_code.into()]))?;
-                return Ok((status_code, output));
+                return Ok((status_code, &output[..n]));
             }
         }
     }
+}
+
+/// Exchange a encrypted message, expecting a plain message in reply.
+///
+/// This assumes the header is "in the clear", and the data we're sending
+/// is encrypted. This also assumes a CRC is included.
+pub async fn encrypted_out_cmac_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
+    backend: &BackendT,
+    ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
+    output: &'a mut [u8],
+    header: &[u8],
+    data: &[&[u8]],
+) -> Result<(StatusCode, &'a [u8]), Error<BackendT::Error>>
+where
+    BackendT: IoBackend,
+    BackendT::Error: Debug,
+    Scheme<KEY_SIZE, AlgorithmT>: CryptoBackend<KEY_SIZE>,
+{
+    let (status_code, response) = encrypted_out_plain_in(backend, ks, output, header, data).await?;
+    let output = ks.validate_cmac(response, Some(&[status_code.into()]))?;
+    Ok((status_code, output))
 }
 
 #[cfg(test)]

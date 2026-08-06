@@ -28,7 +28,7 @@ mod plain;
 
 pub use cmac::{cmac_out_cmac_in, plain_out_cmac_in};
 pub(crate) use crc::check_crc32;
-pub use encrypted::{encrypted_out_plain_in, plain_out_encrypted_in};
+pub use encrypted::{encrypted_out_cmac_in, encrypted_out_plain_in, plain_out_encrypted_in};
 pub use mock::MockBackend;
 #[allow(unused_imports)]
 pub(crate) use mock::mock_backend;

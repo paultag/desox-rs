@@ -46,6 +46,11 @@ where
 
         Ok(application_ids)
     }
+
+    /// Return the currently selected application
+    pub async fn get_current_application(&self) -> ApplicationId {
+        self.application_id
+    }
 }
 
 impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
@@ -60,6 +65,9 @@ where
         out: &'a mut [u8],
         application_id: ApplicationId,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+        // TODO: check if we're switching to the same application we're
+        // currently in and raise an error, since otherwise we'll transition
+        // to unauthenticated.
         let card = self.to_unauthenticated();
         card.select_application(out, application_id).await
     }
@@ -135,6 +143,8 @@ where
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode);
         }
+
+        self.application_id = application_id;
 
         Ok(self)
     }

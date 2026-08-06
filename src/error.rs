@@ -66,6 +66,10 @@ pub enum Error<IoBackendErrorT> {
     #[error("Bad file communication type; authentication needed")]
     BadFileCommunication,
 
+    /// Bad algorithm combination
+    #[error("Bad cryptographic algorithm combination")]
+    BadAlgorithm,
+
     /// Unsupported Communication
     #[error("Unsupported file communication")]
     UnsupportedFileCommunication,
