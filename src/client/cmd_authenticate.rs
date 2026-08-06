@@ -108,11 +108,11 @@ where
 
         let (status_code, response) = match (&mut authentication.session, new_key) {
             (Session::Aes { keying, .. }, Key::Aes(key)) => {
-                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key, &[new_key_version]])
+                io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &[new_key_version]])
                     .await?
             }
             (Session::Des { keying, .. }, Key::Des(key)) => {
-                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key]).await?
+                io::encrypted_out_plain_in(&card, keying, out, header, &[&key]).await?
             }
             _ => {
                 return Err(Error::BadAlgorithm);

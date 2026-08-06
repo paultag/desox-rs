@@ -116,11 +116,11 @@ where
 
         buf_in[..command.len()].copy_from_slice(command);
 
-        let mut buf_data = &mut buf_in[command.len()..];
+        let buf_data = &mut buf_in[command.len()..];
         let Some(n) = (&mut data)
             .take(block_size)
             .copied()
-            .copy_to_slice(&mut buf_data)
+            .copy_to_slice(buf_data)
         else {
             unreachable!();
         };
@@ -131,7 +131,7 @@ where
             n + KEY_SIZE - (n % KEY_SIZE)
         };
 
-        let mut buf_data = &mut buf_data[..block_size];
+        let buf_data = &mut buf_data[..block_size];
         buf_data[n..].fill(0x00);
         encryptor.encrypt(buf_data);
         iv = buf_data[buf_data.len() - KEY_SIZE..].try_into().unwrap();
