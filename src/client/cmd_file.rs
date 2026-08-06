@@ -66,7 +66,7 @@ where
                     file_id: u8 = file_id,
                     offset: [u8; 3] = ToU24::to_le_bytes(offset),
                     length: [u8; 3] = ToU24::to_le_bytes(length)
-                }, [])
+                }, 8, [])
             }
             FileCommunication::Encrypted => {
                 return Err(Error::BadFileCommunication);
@@ -110,7 +110,7 @@ where
             communication: u8 = communication.as_u8(),
             permissions: [u8; 2] = permissions.as_bytes()?,
             size: [u8; 3] = ToU24::to_le_bytes(size)
-        }, []);
+        }, 8, []);
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -145,7 +145,7 @@ where
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
             size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
-        }, [data])
+        }, 8, [data])
             }
             FileCommunication::Cmac => {
                 command_cmac!(self, out, {
@@ -153,7 +153,7 @@ where
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
             size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
-        }, [data])
+        }, 8, [data])
             }
             FileCommunication::Encrypted => {
                 command_encrypted_request!(self, out, {
@@ -161,7 +161,7 @@ where
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
             size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
-        }, [data])
+        }, 8, [data])
             }
         };
 
@@ -198,7 +198,7 @@ where
                     file_id: u8 = file_id,
                     offset: [u8; 3] = ToU24::to_le_bytes(offset),
                     length: [u8; 3] = ToU24::to_le_bytes(length)
-                }, [])
+                }, 8, [])
             }
             FileCommunication::Encrypted => {
                 command_encrypted_response!(self, out, {
@@ -206,7 +206,7 @@ where
                     file_id: u8 = file_id,
                     offset: [u8; 3] = ToU24::to_le_bytes(offset),
                     length: [u8; 3] = ToU24::to_le_bytes(length)
-                }, [])
+                }, 8, [])
             }
         };
 
@@ -231,7 +231,7 @@ where
     ) -> Result<&'a [FileId], Error<IoBackendT::Error>> {
         let (status_code, response) = command!(self, out, {
             instruction: Instruction = Instruction::ListFiles
-        }, []);
+        }, 1, []);
 
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode);
@@ -248,7 +248,7 @@ where
         let (status_code, response) = command!(self, out, {
             instruction: Instruction = Instruction::GetFileSettings,
             file_id: u8 = file_id
-        }, []);
+        }, 2, []);
 
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode);

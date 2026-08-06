@@ -88,7 +88,7 @@ where
             application_id: ApplicationId = application_id,
             key_settings: u8 = key_settings.as_u8()?,
             key_number: u8 = key_number.as_u8()?
-        }, []);
+        }, 6, []);
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -110,7 +110,7 @@ where
         let (status_code, response) = command!(self, out, {
             instruction: Instruction = Instruction::DeleteApplication,
             application_id: ApplicationId = application_id
-        }, []);
+        }, 4, []);
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -140,7 +140,7 @@ where
         let (status_code, response) = command_encrypted_request!(self, out, {
             instruction: Instruction = Instruction::SetConfiguration,
             configuration_key: u8 = 0x01
-        }, [&default_key, &[key_version]]);
+        }, 2, [&default_key, &[key_version]]);
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -167,7 +167,7 @@ where
         let (status_code, response) = command!((&mut self), out, {
             instruction: Instruction = Instruction::SelectApplication,
             application_id: ApplicationId = application_id
-        }, []);
+        }, 4, []);
 
         if !response.is_empty() {
             return Err(Error::BadSize);

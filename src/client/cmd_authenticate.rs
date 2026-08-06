@@ -106,10 +106,10 @@ where
             };
         }
 
-        let header: &[u8] = command_header!({
+        let header: [u8; 2] = command_header!({
             instruction: Instruction = Instruction::ChangeKey,
             key_id: KeyId = key_id
-        });
+        }, 2);
 
         let Self {
             mut authentication,
@@ -129,12 +129,12 @@ where
                 //
                 // [CHPW] [KEY ID] [   KEY   ] [ VER ] [ CRC ]
                 //
-                let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
+                let crc = crc32(&header, &[&key, &[new_key_version]]).to_le_bytes();
                 io::encrypted_out_plain_in(
                     &card,
                     keying,
                     out,
-                    header,
+                    &header,
                     &[&key, &[new_key_version], &crc],
                 )
                 .await?
@@ -146,8 +146,8 @@ where
                 //
                 // [CHPW] [KEY ID] [ KEY ] [ PAD TO 16 ] [ CRC ]
                 //
-                let crc = crc32(header, &[&key, &[0; 8]]).to_le_bytes();
-                io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &[0; 8], &crc])
+                let crc = crc32(&header, &[&key, &[0; 8]]).to_le_bytes();
+                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key, &[0; 8], &crc])
                     .await?
             }
             (Session::Des { keying, .. }, Key::Aes(key)) => {
@@ -155,12 +155,12 @@ where
                 //
                 // [CHPW] [KEY ID] [   KEY   ] [ VER ] [ CRC ]
                 //
-                let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
+                let crc = crc32(&header, &[&key, &[new_key_version]]).to_le_bytes();
                 io::encrypted_out_plain_in(
                     &card,
                     keying,
                     out,
-                    header,
+                    &header,
                     &[&key, &[new_key_version], &crc],
                 )
                 .await?
@@ -170,8 +170,8 @@ where
                 //
                 // [CHPW] [KEY ID] [   KEY   ] [ CRC ]
                 //
-                let crc = crc32(header, &[&key]).to_le_bytes();
-                io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &crc]).await?
+                let crc = crc32(&header, &[&key]).to_le_bytes();
+                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key, &crc]).await?
             }
         };
 
@@ -193,27 +193,23 @@ where
     /// Change the currently authenticated key ID to something new (`new_key`).
     /// This requires that we prove knowledge of the current key.
     pub async fn change_key(
-        self,
+        &mut self,
         out: &mut [u8],
         key_id: KeyId,
         current_key: Key,
         new_key: Key,
         new_key_version: u8,
-    ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+    ) -> Result<(), Error<IoBackendT::Error>> {
         if self.application_id == [0; 3] {
+            // There's only one root application key, so we can only
+            // run this inside an application.
             return Err(Error::NoSelectedApplication);
         }
 
-        let header: &[u8] = command_header!({
+        let header: [u8; 2] = command_header!({
             instruction: Instruction = Instruction::ChangeKey,
             key_id: KeyId = key_id
-        });
-
-        let Self {
-            mut authentication,
-            application_id,
-            card,
-        } = self;
+        }, 2);
 
         let mut xor_key = new_key;
         let new_key_crc = match (&mut xor_key, &current_key) {
@@ -233,22 +229,28 @@ where
         }
         .to_le_bytes();
 
-        let (status_code, response) = match (&mut authentication.session, xor_key) {
+        let (status_code, response) = match (&mut self.authentication.session, xor_key) {
             (Session::Aes { keying, .. }, Key::Aes(key)) => {
-                let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
+                let crc = crc32(&header, &[&key, &[new_key_version]]).to_le_bytes();
                 io::encrypted_out_cmac_in(
-                    &card,
+                    &self.card,
                     keying,
                     out,
-                    header,
+                    &header,
                     &[&key, &[new_key_version], &crc, &new_key_crc],
                 )
                 .await?
             }
             (Session::Des { keying, .. }, Key::Des(key)) => {
-                let crc = crc32(header, &[&key]).to_le_bytes();
-                io::encrypted_out_cmac_in(&card, keying, out, header, &[&key, &crc, &new_key_crc])
-                    .await?
+                let crc = crc32(&header, &[&key]).to_le_bytes();
+                io::encrypted_out_cmac_in(
+                    &self.card,
+                    keying,
+                    out,
+                    &header,
+                    &[&key, &crc, &new_key_crc],
+                )
+                .await?
             }
             _ => {
                 return Err(Error::BadAlgorithm);
@@ -263,11 +265,7 @@ where
             return Err(Error::BadStatusCode);
         }
 
-        Ok(Card {
-            authentication: Unauthenticated,
-            application_id,
-            card,
-        })
+        Ok(())
     }
 }
 
