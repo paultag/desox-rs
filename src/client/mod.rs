@@ -36,13 +36,13 @@ mod handshake;
 mod keying;
 mod session;
 
-pub use card::{Authenticated, Card, Unauthenticated};
+pub use card::{Authenticated, AuthenticationState, Card, Unauthenticated};
 pub use keying::KeyingState;
 pub use session::Session;
 
 use card::{
-    AuthenticationState, CardIoDefault, command, command_cmac, command_encrypted_request,
-    command_encrypted_response, command_header,
+    CardIoDefault, command, command_cmac, command_encrypted_request, command_encrypted_response,
+    command_header,
 };
 pub(crate) use handshake::AuthenticateExt;
 

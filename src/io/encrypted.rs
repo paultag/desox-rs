@@ -106,11 +106,7 @@ where
         buf_in[..command.len()].copy_from_slice(command);
 
         let buf_data = &mut buf_in[command.len()..];
-        let Some(n) = (&mut data)
-            .take(block_size)
-            .copied()
-            .copy_to_slice(buf_data)
-        else {
+        let Some(n) = (&mut data).take(59).copied().copy_to_slice(buf_data) else {
             unreachable!();
         };
 

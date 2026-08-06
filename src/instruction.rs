@@ -59,6 +59,10 @@ pub enum Instruction {
     /// Get the card's real UID
     GetUid = 0x51,
 
+    /// Set a bit of card configuration. This accepts a second argument
+    /// (which is the "key" that you're setting).
+    SetConfiguration = 0x5C,
+
     /// Format the Card
     FormatCard = 0xFC,
 

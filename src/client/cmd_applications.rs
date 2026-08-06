@@ -18,8 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-use super::{Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command};
-use crate::{ApplicationId, Error, Instruction, KeyCount, KeySettings, StatusCode, io};
+use super::{
+    Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command,
+    command_encrypted_request,
+};
+use crate::{ApplicationId, Error, Instruction, Key, KeyCount, KeySettings, StatusCode, io};
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
 where
@@ -108,6 +111,36 @@ where
             instruction: Instruction = Instruction::DeleteApplication,
             application_id: ApplicationId = application_id
         }, []);
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode);
+        }
+
+        Ok(())
+    }
+
+    /// This will change the default key (0x00) that is set after we
+    /// create an application.
+    pub async fn change_default_application_key(
+        &mut self,
+        out: &mut [u8],
+        key: Key,
+        key_version: u8,
+    ) -> Result<(), Error<IoBackendT::Error>> {
+        let mut default_key = [0; 24];
+        match key {
+            Key::Aes(key) => default_key[..16].copy_from_slice(&key),
+            Key::Des(key) => default_key[..8].copy_from_slice(&key),
+        }
+
+        let (status_code, response) = command_encrypted_request!(self, out, {
+            instruction: Instruction = Instruction::SetConfiguration,
+            configuration_key: u8 = 0x01
+        }, [&default_key, &[key_version]]);
 
         if !response.is_empty() {
             return Err(Error::BadSize);

@@ -54,8 +54,8 @@ mod status_code;
 mod version_info;
 
 pub use client::{
-    Authenticated, AuthenticatedCard, Card, KeyingState, Session, Unauthenticated,
-    UnauthenticatedCard,
+    Authenticated, AuthenticatedCard, AuthenticationState, Card, KeyingState, Session,
+    Unauthenticated, UnauthenticatedCard,
 };
 pub use error::Error;
 pub use file::{FileCommunication, FilePermissions, FileSettings, FileType};
