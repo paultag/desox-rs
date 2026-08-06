@@ -91,9 +91,24 @@ where
         new_key: Key,
         new_key_version: u8,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+        let mut key_id = self.authentication.session.get_key_id();
+
+        if self.application_id == [0; 3] {
+            // If we're in the default '00 00 00' application, we need to
+            // change the key id's high bits to indicate the key type. when
+            // making an application, we can provide the [crate::KeyCount]
+            // to specify algorithm, but no such luck here. As such, we can
+            // set the high bit as required.
+
+            key_id |= match new_key {
+                Key::Aes(_) => 0x80,
+                Key::Des(_) => 0x00,
+            };
+        }
+
         let header: &[u8] = command_header!({
             instruction: Instruction = Instruction::ChangeKey,
-            key_id: KeyId = self.authentication.session.get_key_id()
+            key_id: KeyId = key_id
         });
 
         let Self {
@@ -110,6 +125,36 @@ where
 
         let (status_code, response) = match (&mut authentication.session, new_key) {
             (Session::Aes { keying, .. }, Key::Aes(key)) => {
+                // Changing AES key to a new AES key
+                //
+                // [CHPW] [KEY ID] [   KEY   ] [ VER ] [ CRC ]
+                //
+                let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
+                io::encrypted_out_plain_in(
+                    &card,
+                    keying,
+                    out,
+                    header,
+                    &[&key, &[new_key_version], &crc],
+                )
+                .await?
+            }
+            (Session::Aes { keying, .. }, Key::Des(key)) => {
+                // Changing AES key to a new DES key (WTF). Here we need to
+                // pad the key out to 16 bytes, and the version/crc is assumed
+                // to start there.
+                //
+                // [CHPW] [KEY ID] [ KEY ] [ PAD TO 16 ] [ CRC ]
+                //
+                let crc = crc32(header, &[&key, &[0; 8]]).to_le_bytes();
+                io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &[0; 8], &crc])
+                    .await?
+            }
+            (Session::Des { keying, .. }, Key::Aes(key)) => {
+                // Changing DES key to a new AES key (nice)
+                //
+                // [CHPW] [KEY ID] [   KEY   ] [ VER ] [ CRC ]
+                //
                 let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
                 io::encrypted_out_plain_in(
                     &card,
@@ -121,11 +166,12 @@ where
                 .await?
             }
             (Session::Des { keying, .. }, Key::Des(key)) => {
+                // Changing DES key to a new DES key (fine whatever)
+                //
+                // [CHPW] [KEY ID] [   KEY   ] [ CRC ]
+                //
                 let crc = crc32(header, &[&key]).to_le_bytes();
                 io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &crc]).await?
-            }
-            _ => {
-                return Err(Error::BadAlgorithm);
             }
         };
 
@@ -154,6 +200,10 @@ where
         new_key: Key,
         new_key_version: u8,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+        if self.application_id == [0; 3] {
+            return Err(Error::NoSelectedApplication);
+        }
+
         let header: &[u8] = command_header!({
             instruction: Instruction = Instruction::ChangeKey,
             key_id: KeyId = key_id

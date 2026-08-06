@@ -74,6 +74,10 @@ pub enum Error<IoBackendErrorT> {
     #[error("Unsupported file communication")]
     UnsupportedFileCommunication,
 
+    /// No Selected Application
+    #[error("Command assumes that we're in an application, but we're not")]
+    NoSelectedApplication,
+
     /// Partial write of our queued data
     #[error("incomplete write")]
     IncompleteWrite,
