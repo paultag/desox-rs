@@ -24,6 +24,8 @@ use crate::{
         AuthenticateExt, Authenticated, AuthenticationState, Card, KeyingState, Session,
         command_header,
     },
+    crc32,
+    crypto::xor,
     io,
 };
 
@@ -103,16 +105,100 @@ where
         // We can't use command_encrypted_request here because the response
         // isn't CMAC; it's plain (since the operation itself is what will
         // tear down the session). As a result, we have to explicitly call
-        // encrypted_out_plain_in so we don't try to validate cmac, we are
+        // encrypted_out__in so we don't try to validate cmac, we are
         // dropping the session anyway at function return.
 
         let (status_code, response) = match (&mut authentication.session, new_key) {
             (Session::Aes { keying, .. }, Key::Aes(key)) => {
-                io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &[new_key_version]])
-                    .await?
+                let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
+                io::encrypted_out_plain_in(
+                    &card,
+                    keying,
+                    out,
+                    header,
+                    &[&key, &[new_key_version], &crc],
+                )
+                .await?
             }
             (Session::Des { keying, .. }, Key::Des(key)) => {
-                io::encrypted_out_plain_in(&card, keying, out, header, &[&key]).await?
+                let crc = crc32(header, &[&key]).to_le_bytes();
+                io::encrypted_out_plain_in(&card, keying, out, header, &[&key, &crc]).await?
+            }
+            _ => {
+                return Err(Error::BadAlgorithm);
+            }
+        };
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode);
+        }
+
+        Ok(Card {
+            authentication: Unauthenticated,
+            application_id,
+            card,
+        })
+    }
+
+    /// Change the currently authenticated key ID to something new (`new_key`).
+    /// This requires that we prove knowledge of the current key.
+    pub async fn change_key(
+        self,
+        out: &mut [u8],
+        key_id: KeyId,
+        current_key: Key,
+        new_key: Key,
+        new_key_version: u8,
+    ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+        let header: &[u8] = command_header!({
+            instruction: Instruction = Instruction::ChangeKey,
+            key_id: KeyId = key_id
+        });
+
+        let Self {
+            mut authentication,
+            application_id,
+            card,
+        } = self;
+
+        let mut xor_key = new_key;
+        let new_key_crc = match (&mut xor_key, &current_key) {
+            (Key::Aes(xor_key), Key::Aes(current_key)) => {
+                let crc = crc32(xor_key, &[]);
+                xor(xor_key, current_key);
+                crc
+            }
+            (Key::Des(xor_key), Key::Des(current_key)) => {
+                let crc = crc32(xor_key, &[]);
+                xor(xor_key, current_key);
+                crc
+            }
+            _ => {
+                return Err(Error::BadAlgorithm);
+            }
+        }
+        .to_le_bytes();
+
+        let (status_code, response) = match (&mut authentication.session, xor_key) {
+            (Session::Aes { keying, .. }, Key::Aes(key)) => {
+                let crc = crc32(header, &[&key, &[new_key_version]]).to_le_bytes();
+                io::encrypted_out_cmac_in(
+                    &card,
+                    keying,
+                    out,
+                    header,
+                    &[&key, &[new_key_version], &crc, &new_key_crc],
+                )
+                .await?
+            }
+            (Session::Des { keying, .. }, Key::Des(key)) => {
+                let crc = crc32(header, &[&key]).to_le_bytes();
+                io::encrypted_out_cmac_in(&card, keying, out, header, &[&key, &crc, &new_key_crc])
+                    .await?
             }
             _ => {
                 return Err(Error::BadAlgorithm);

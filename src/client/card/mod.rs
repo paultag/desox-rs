@@ -64,12 +64,13 @@ macro_rules! command_encrypted_request {
             $( $field_name: $field_type = $field_value ),*
         });
 
+        let crc = $crate::crc32(header, &[ $( $body ),* ]).to_le_bytes();
         match &mut $slf.authentication.session {
             $crate::client::Session::Aes { keying, .. } => {
-                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
+                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, $out, &header, &[ $( $body, )* &crc ]).await?
             },
             $crate::client::Session::Des { keying, .. } => {
-                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
+                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, $out, &header, &[ $( $body, )* &crc ]).await?
             },
         }
     }};

@@ -21,7 +21,6 @@
 use crate::{
     CopyToSlice, Error, Instruction, Padding, StatusCode,
     client::KeyingState,
-    crc32,
     crypto::{Backend as CryptoBackend, BackendDecryptor, BackendEncryptor, Scheme},
     io::{Backend as IoBackend, plain_multi},
     std::fmt::Debug,
@@ -81,16 +80,6 @@ where
     BackendT::Error: Debug,
     Scheme<KEY_SIZE, AlgorithmT>: CryptoBackend<KEY_SIZE>,
 {
-    // first let's compute our crc32. we're going to include this at the
-    // very end of the encrypted message. doing this now means we can
-    // handle the streaming bits ourselves and bypass using plain_multi,
-    // and re-implement the AF logic here too.
-
-    let crc = crc32(header, data).to_le_bytes();
-    let mut data = data.to_vec();
-    data.push(&crc);
-    let data = &data;
-
     let (mut data, data_len) = {
         let data_len = data.iter().fold(0, |n, data| n + data.len());
         (data.iter().flat_map(|v| v.iter()), data_len)
