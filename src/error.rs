@@ -80,10 +80,6 @@ pub enum Error<IoBackendErrorT> {
     #[error("Command assumes that we're in an application, but we're not")]
     NoSelectedApplication,
 
-    /// Partial write of our queued data
-    #[error("incomplete write")]
-    IncompleteWrite,
-
     /// Partal read of our file's data
     #[error("incomplete read of a file")]
     PartialRead,

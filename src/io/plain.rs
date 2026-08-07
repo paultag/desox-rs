@@ -57,7 +57,7 @@ where
     BackendT: Backend,
     BackendT::Error: crate::std::fmt::Debug,
 {
-    let (mut data, data_len) = {
+    let (mut data, _data_len) = {
         let data_len = data.iter().fold(0, |n, data| n + data.len());
         (data.iter().flat_map(|v| v.iter()), data_len)
     };
@@ -66,7 +66,6 @@ where
     let mut buf_in = [0; 0xff]; // used to create a command
     let mut buf_out = [0; 0xff]; // used to write responses to
     let mut n = 0;
-    let mut n_out = 0;
 
     loop {
         let (status_code, response) = backend
@@ -89,16 +88,12 @@ where
                     // if we have more "outgoing" data, we need to pipe that
                     // out along with the 0xAF
                     command = &buf_in[..(n + 1)];
-                    n_out += n;
                 } else {
                     command = &buf_in[..1];
                 }
                 continue;
             }
             _ => {
-                if n_out != data_len {
-                    return Err(Error::IncompleteWrite);
-                }
                 return Ok((status_code, &output[..n]));
             }
         }

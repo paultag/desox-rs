@@ -69,7 +69,13 @@ where
     pub fn get_current_key_id(&self) -> KeyId {
         self.authentication.session.get_key_id()
     }
+}
 
+impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
+where
+    AuthenticationStateT: AuthenticationState,
+    IoBackendT: io::Backend,
+{
     /// Drop Authentication. This doesn't actually change anything on the
     /// card state -- this is only useful if you (the user) know you did
     /// something that caused you to be "logged out" that the type system

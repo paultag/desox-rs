@@ -79,49 +79,6 @@ where
 
         Ok(response)
     }
-}
-
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
-where
-    IoBackendT: io::Backend,
-{
-    /// Create a file within the currently open application.
-    pub async fn create_file(
-        &mut self,
-        out: &mut [u8],
-        file_id: FileId,
-        settings: FileSettings,
-    ) -> Result<(), Error<IoBackendT::Error>> {
-        let FileSettings {
-            type_,
-            communication,
-            permissions,
-            size,
-        } = settings;
-
-        #[expect(irrefutable_let_patterns)]
-        let FileType::Data = type_ else {
-            unimplemented!();
-        };
-
-        let (status_code, response) = command!(self, out, {
-            instruction: Instruction = Instruction::CreateDataFile,
-            file_id: u8 = file_id,
-            communication: u8 = communication.as_u8(),
-            permissions: [u8; 2] = permissions.as_bytes()?,
-            size: [u8; 3] = ToU24::to_le_bytes(size)
-        }, 8, []);
-
-        if !response.is_empty() {
-            return Err(Error::BadSize);
-        };
-
-        if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode(status_code));
-        }
-
-        Ok(())
-    }
 
     /// Create a file within the currently open application.
     pub async fn write_file_at(
@@ -139,7 +96,7 @@ where
         };
 
         let (status_code, response) = match communication {
-            FileCommunication::Plain => {
+            FileCommunication::Plain | FileCommunication::Cmac => {
                 command!(self, out, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
@@ -147,21 +104,8 @@ where
             size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
         }, 8, [data])
             }
-            FileCommunication::Cmac => {
-                command_cmac!(self, out, {
-            instruction: Instruction = Instruction::WriteDataFile,
-            file_id: u8 = file_id,
-            offset: [u8; 3] = ToU24::to_le_bytes(offset),
-            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
-        }, 8, [data])
-            }
             FileCommunication::Encrypted => {
-                command_encrypted_request!(self, out, {
-            instruction: Instruction = Instruction::WriteDataFile,
-            file_id: u8 = file_id,
-            offset: [u8; 3] = ToU24::to_le_bytes(offset),
-            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
-        }, 8, [data])
+                return Err(Error::BadFileCommunication);
             }
         };
 
@@ -175,7 +119,12 @@ where
 
         Ok(())
     }
+}
 
+impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+where
+    IoBackendT: io::Backend,
+{
     /// Read from a file
     pub async fn read_file_at<'a>(
         &mut self,
@@ -225,16 +174,47 @@ where
         Ok(response)
     }
 
-    /// Delete a file
-    pub async fn delete_file(
+    /// Create a file within the currently open application.
+    pub async fn write_file_at(
         &mut self,
         out: &mut [u8],
         file_id: FileId,
+        type_: FileType,
+        communication: FileCommunication,
+        offset: u32,
+        data: &[u8],
     ) -> Result<(), Error<IoBackendT::Error>> {
-        let (status_code, response) = command!(self, out, {
-            instruction: Instruction = Instruction::DeleteFile,
-            file_id: FileId = file_id
-        }, 2, []);
+        #[expect(irrefutable_let_patterns)]
+        let FileType::Data = type_ else {
+            unimplemented!();
+        };
+
+        let (status_code, response) = match communication {
+            FileCommunication::Plain => {
+                command!(self, out, {
+            instruction: Instruction = Instruction::WriteDataFile,
+            file_id: u8 = file_id,
+            offset: [u8; 3] = ToU24::to_le_bytes(offset),
+            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+        }, 8, [data])
+            }
+            FileCommunication::Cmac => {
+                command_cmac!(self, out, {
+            instruction: Instruction = Instruction::WriteDataFile,
+            file_id: u8 = file_id,
+            offset: [u8; 3] = ToU24::to_le_bytes(offset),
+            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+        }, 8, [data])
+            }
+            FileCommunication::Encrypted => {
+                command_encrypted_request!(self, out, {
+            instruction: Instruction = Instruction::WriteDataFile,
+            file_id: u8 = file_id,
+            offset: [u8; 3] = ToU24::to_le_bytes(offset),
+            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+        }, 8, [data])
+            }
+        };
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -299,6 +279,66 @@ where
             permissions,
             size,
         })
+    }
+
+    /// Create a file within the currently open application.
+    pub async fn create_file(
+        &mut self,
+        out: &mut [u8],
+        file_id: FileId,
+        settings: FileSettings,
+    ) -> Result<(), Error<IoBackendT::Error>> {
+        let FileSettings {
+            type_,
+            communication,
+            permissions,
+            size,
+        } = settings;
+
+        #[expect(irrefutable_let_patterns)]
+        let FileType::Data = type_ else {
+            unimplemented!();
+        };
+
+        let (status_code, response) = command!(self, out, {
+            instruction: Instruction = Instruction::CreateDataFile,
+            file_id: u8 = file_id,
+            communication: u8 = communication.as_u8(),
+            permissions: [u8; 2] = permissions.as_bytes()?,
+            size: [u8; 3] = ToU24::to_le_bytes(size)
+        }, 8, []);
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode(status_code));
+        }
+
+        Ok(())
+    }
+
+    /// Delete a file
+    pub async fn delete_file(
+        &mut self,
+        out: &mut [u8],
+        file_id: FileId,
+    ) -> Result<(), Error<IoBackendT::Error>> {
+        let (status_code, response) = command!(self, out, {
+            instruction: Instruction = Instruction::DeleteFile,
+            file_id: FileId = file_id
+        }, 2, []);
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode(status_code));
+        }
+
+        Ok(())
     }
 }
 

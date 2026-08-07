@@ -51,28 +51,37 @@ where
     }
 
     /// Return the currently selected application
-    pub async fn get_current_application(&self) -> ApplicationId {
+    pub fn get_current_application(&self) -> ApplicationId {
         self.application_id
     }
-}
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
-where
-    IoBackendT: io::Backend,
-{
     /// Select an application.
     ///
     /// This consumes `self` and returns a new (unauthenticated) card.
     pub async fn select_application<'a>(
-        self,
+        mut self,
         out: &'a mut [u8],
         application_id: ApplicationId,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+        let (status_code, response) = command!((&mut self), out, {
+            instruction: Instruction = Instruction::SelectApplication,
+            application_id: ApplicationId = application_id
+        }, 4, []);
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode(status_code));
+        }
+
         // TODO: check if we're switching to the same application we're
         // currently in and raise an error, since otherwise we'll transition
         // to unauthenticated.
-        let card = self.to_unauthenticated();
-        card.select_application(out, application_id).await
+        let mut card = self.to_unauthenticated();
+        card.application_id = application_id;
+        Ok(card)
     }
 
     /// Create an Application
@@ -122,7 +131,12 @@ where
 
         Ok(())
     }
+}
 
+impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+where
+    IoBackendT: io::Backend,
+{
     /// This will change the default key (0x00) that is set after we
     /// create an application.
     pub async fn change_default_application_key(
@@ -151,35 +165,6 @@ where
         }
 
         Ok(())
-    }
-}
-
-impl<'card, IoBackendT> Card<'card, IoBackendT, Unauthenticated>
-where
-    IoBackendT: io::Backend,
-{
-    /// Select an application.
-    pub async fn select_application(
-        mut self,
-        out: &mut [u8],
-        application_id: ApplicationId,
-    ) -> Result<Self, Error<IoBackendT::Error>> {
-        let (status_code, response) = command!((&mut self), out, {
-            instruction: Instruction = Instruction::SelectApplication,
-            application_id: ApplicationId = application_id
-        }, 4, []);
-
-        if !response.is_empty() {
-            return Err(Error::BadSize);
-        };
-
-        if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode(status_code));
-        }
-
-        self.application_id = application_id;
-
-        Ok(self)
     }
 }
 
