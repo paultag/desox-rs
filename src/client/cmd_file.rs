@@ -74,7 +74,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(response)
@@ -117,7 +117,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
@@ -170,7 +170,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
@@ -210,17 +210,25 @@ where
             }
         };
 
+        let n = response.len().min(length as usize);
+        if n < (length as usize) {
+            return Err(Error::PartialRead);
+        }
+
+        // we know the size, so we don't pad/unpad here.
+        let response = &response[..n];
+
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(response)
     }
 
     /// Delete a file
-    pub async fn delete_file<'a>(
+    pub async fn delete_file(
         &mut self,
-        out: &'a mut [u8],
+        out: &mut [u8],
         file_id: FileId,
     ) -> Result<(), Error<IoBackendT::Error>> {
         let (status_code, response) = command!(self, out, {
@@ -233,7 +241,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
@@ -256,7 +264,7 @@ where
         }, 1, []);
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(response)
@@ -273,7 +281,7 @@ where
         }, 2, []);
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         if response.len() != 7 {

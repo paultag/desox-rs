@@ -180,7 +180,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(Card {
@@ -262,7 +262,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())

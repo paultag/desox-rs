@@ -44,22 +44,22 @@ impl Padding {
         block[pos] = 0x80;
     }
 
-    /// Remove DESFire-specific padding to the data buffer, removing trailing
-    /// 0x00 prefixed with a 0x80.
-    ///
-    /// If the data is not well formed (ending with 0x00 and a 0x80), the
-    /// entire block is returned without removed padding.
-    pub fn unpad(block: &[u8]) -> &[u8] {
-        for i in (0..block.len()).rev() {
-            if block[i] != 0x00 {
-                if block[i] == 0x80 {
-                    return &block[..i];
-                }
-                return block;
-            }
-        }
-        block
-    }
+    // /// Remove DESFire-specific padding to the data buffer, removing trailing
+    // /// 0x00 prefixed with a 0x80.
+    // ///
+    // /// If the data is not well formed (ending with 0x00 and a 0x80), the
+    // /// entire block is returned without removed padding.
+    // pub fn unpad(block: &[u8]) -> &[u8] {
+    //     for i in (0..block.len()).rev() {
+    //         if block[i] != 0x00 {
+    //             if block[i] == 0x80 {
+    //                 return &block[..i];
+    //             }
+    //             return block;
+    //         }
+    //     }
+    //     block
+    // }
 }
 
 #[cfg(test)]

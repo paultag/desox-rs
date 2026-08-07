@@ -95,7 +95,7 @@ where
             .map_err(Error::IoBackend)?;
 
         if status_code != StatusCode::AdditionalData {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         let (handshake, command) = if let Some(rnd_a) = rnd_a {
@@ -110,7 +110,7 @@ where
             .map_err(Error::IoBackend)?;
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(handshake.complete(response)?.into_key())

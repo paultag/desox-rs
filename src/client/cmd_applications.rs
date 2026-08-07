@@ -40,7 +40,7 @@ where
             .await?;
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         let (application_ids, &[]) = response.as_chunks::<3>() else {
@@ -95,7 +95,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
@@ -117,7 +117,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
@@ -147,7 +147,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
@@ -174,7 +174,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         self.application_id = application_id;

@@ -45,7 +45,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok((
@@ -65,7 +65,7 @@ where
         };
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(key_version)

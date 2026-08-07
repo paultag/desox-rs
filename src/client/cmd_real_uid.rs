@@ -58,7 +58,7 @@ where
         let response = io::check_crc32(response, &[&[status_code.into()]])?;
 
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
         let uid: &Uid = response.try_into().map_err(|_| Error::BadSize)?;
         Ok(*uid)

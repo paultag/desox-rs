@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
+use super::StatusCode;
+
 /// Errors that can be encountered when interacting with a MIFARE DESFire
 /// card. This is fairly expansive (and has a generic for an error returned
 /// by the specific I/O backend you're using).
@@ -28,8 +30,8 @@ pub enum Error<IoBackendErrorT> {
     IoBackend(IoBackendErrorT),
 
     /// DESFire Card replied with a bad or unexpected StatusCode
-    #[error("DESFire Card replied with a bad or unexpected StatusCode")]
-    BadStatusCode,
+    #[error("DESFire Card replied with a bad or unexpected StatusCode ({0:?})")]
+    BadStatusCode(StatusCode),
 
     /// The amount of data returned by the DESFire Card was wrong or unexpected.
     #[error("The amount of data returned by the DESFire Card was wrong or unexpected.")]
@@ -81,6 +83,10 @@ pub enum Error<IoBackendErrorT> {
     /// Partial write of our queued data
     #[error("incomplete write")]
     IncompleteWrite,
+
+    /// Partal read of our file's data
+    #[error("incomplete read of a file")]
+    PartialRead,
 
     // Third-party libraries here
     //

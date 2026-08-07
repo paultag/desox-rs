@@ -19,7 +19,7 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    CopyToSlice, Error, Instruction, Padding, StatusCode,
+    CopyToSlice, Error, Instruction, StatusCode,
     client::KeyingState,
     crypto::{Backend as CryptoBackend, BackendDecryptor, BackendEncryptor, Scheme},
     io::{Backend as IoBackend, plain_multi},
@@ -27,6 +27,9 @@ use crate::{
 };
 
 /// Exchange a plain message, expecting an encrypted message in reply.
+///
+/// We don't pad/unpad in here, since this is technically a higher-level
+/// concern.
 pub async fn plain_out_encrypted_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
     backend: &BackendT,
     ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
@@ -56,8 +59,6 @@ where
 
     let mut decryptor = ks.decryptor();
     decryptor.decrypt(data);
-
-    let data = Padding::unpad(data);
 
     ks.set_iv(iv);
 

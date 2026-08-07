@@ -37,7 +37,7 @@ where
             return Err(Error::BadSize);
         };
         if status_code != StatusCode::Ack {
-            return Err(Error::BadStatusCode);
+            return Err(Error::BadStatusCode(status_code));
         }
 
         Ok(())
