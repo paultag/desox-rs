@@ -36,6 +36,9 @@ pub enum Instruction {
     /// Get key settings for the open Application
     GetKeySettings = 0x45,
 
+    // /// Change the key for a specific key slot.
+    // ChangeKeySettings = 0x54,
+    //
     /// Get the key version for a Key ID
     GetKeyVersion = 0x64,
 
@@ -47,6 +50,9 @@ pub enum Instruction {
 
     /// Change the key for a specific key slot.
     ChangeKey = 0xC4,
+
+    //
+    // GetFreeMemory = 0x6E,
 
     // Instructions that are about the "global" state of the card.
     //
@@ -82,20 +88,44 @@ pub enum Instruction {
     /// Create a data file
     CreateDataFile = 0xCD,
 
+    // GetDataFileNames = 0x6D (Am I reading this right?)
+    //   -> Maybe 0xD6 to set it? A lot of the write opcodes are flipped,
+    //      like  0x45/0x54 or 0xF5/0x5F
+    //
+    // CreateBackupDataFile = 0xCB,
+    // CreateValueFile = 0xCC,
+    // CreateLinearRecordFile = 0xC1
+    // CreateCyclicRecordFile = 0xC0
+    //
     /// Write to a Data File
     WriteDataFile = 0x3D,
 
     /// Read to a Data File
     ReadDataFile = 0xBD,
 
+    // ReadValueFile = 0x6C
+    // CreditValueFile = 0x0C
+    // DebitValueFile = 0xDC
+    // LimitedCreditValueFile = 0x1C
+    //
+    // WriteRecordFile = 0x3B,
+    // ReadRecordFile = 0xBB,
+    // ClearRecordFile = 0xEB,
+    //
     /// Get file settings back off the card
     GetFileSettings = 0xF5,
 
+    // /// Set file settings
+    // ChangeFileSettings = 0x5F,
+    //
     /// List files in an application
     ListFiles = 0x6F,
 
     /// Delete a file
     DeleteFile = 0xDF,
+    //
+    // CommitTransaction = 0xC7,
+    // AbortTransaction = 0xA7
 }
 
 // vim: foldmethod=marker
