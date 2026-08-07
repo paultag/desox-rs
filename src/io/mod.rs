@@ -44,8 +44,6 @@ use crate::{
 pub trait Backend
 where
     Self::Error: Debug,
-    Self: Send,
-    Self: Sync,
 {
     /// Error type returned by the underlying transport.
     type Error;
@@ -57,7 +55,7 @@ where
         &self,
         output: &mut [u8],
         input: &[u8],
-    ) -> impl Future<Output = Result<usize, Self::Error>> + Send + Sync;
+    ) -> impl Future<Output = Result<usize, Self::Error>>;
 
     /// Helper function to handle exchanging a single message with the
     /// backend. This will invoke [Self::exchange_raw], split (and parse)
