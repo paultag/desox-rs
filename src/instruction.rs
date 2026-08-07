@@ -93,6 +93,9 @@ pub enum Instruction {
 
     /// List files in an application
     ListFiles = 0x6F,
+
+    /// Delete a file
+    DeleteFile = 0xDF,
 }
 
 // vim: foldmethod=marker

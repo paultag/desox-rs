@@ -216,6 +216,28 @@ where
 
         Ok(response)
     }
+
+    /// Delete a file
+    pub async fn delete_file<'a>(
+        &mut self,
+        out: &'a mut [u8],
+        file_id: FileId,
+    ) -> Result<(), Error<IoBackendT::Error>> {
+        let (status_code, response) = command!(self, out, {
+            instruction: Instruction = Instruction::DeleteFile,
+            file_id: FileId = file_id
+        }, 2, []);
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode);
+        }
+
+        Ok(())
+    }
 }
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
