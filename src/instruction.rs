@@ -51,8 +51,8 @@ pub enum Instruction {
     /// Change the key for a specific key slot.
     ChangeKey = 0xC4,
 
-    //
-    // GetFreeMemory = 0x6E,
+    /// Get free EEPROM ROM space for persistant storage.
+    GetFreeMemory = 0x6E,
 
     // Instructions that are about the "global" state of the card.
     //

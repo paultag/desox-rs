@@ -340,6 +340,26 @@ where
 
         Ok(())
     }
+
+    /// Get the amount of free memory remaining on the card
+    pub async fn get_free_memory(
+        &mut self,
+        out: &mut [u8],
+    ) -> Result<u32, Error<IoBackendT::Error>> {
+        let (status_code, &[s1, s2, s3]) = self
+            .default_exchange(out, &[Instruction::GetFreeMemory as u8])
+            .await?
+        else {
+            return Err(Error::BadSize);
+        };
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode(status_code));
+        }
+
+        let size = u32::from_le_bytes([s1, s2, s3, 0x00]);
+        Ok(size)
+    }
 }
 
 // vim: foldmethod=marker
