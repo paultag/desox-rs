@@ -24,7 +24,6 @@
 //! "escape hatch" when higher-level bindings are not quite cutting it.
 
 mod card;
-mod change_key;
 mod cmd_applications;
 mod cmd_authenticate;
 mod cmd_card_version;
@@ -37,6 +36,7 @@ mod keying;
 mod session;
 
 pub use card::{Authenticated, AuthenticationState, Card, Unauthenticated};
+pub use cmd_file::FileIo;
 pub use keying::KeyingState;
 pub use session::Session;
 

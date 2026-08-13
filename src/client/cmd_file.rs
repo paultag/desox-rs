@@ -40,12 +40,41 @@ impl ToU24 for u32 {
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Unauthenticated>
+/// Trait to handle file i/o (be it authenticated or not!) -- this is a trait
+/// because the specific way we talk to a file changes depending on
+/// authentication.
+pub trait FileIo<'card, IoBackendT>
 where
     IoBackendT: io::Backend,
 {
     /// Read from a file
-    pub async fn read_file_at<'a>(
+    fn read_file_at<'a>(
+        &mut self,
+        out: &'a mut [u8],
+        file_id: FileId,
+        type_: FileType,
+        communication: FileCommunication,
+        offset: u32,
+        length: u32,
+    ) -> impl Future<Output = Result<&'a [u8], Error<IoBackendT::Error>>>;
+
+    /// Write to a file
+    fn write_file_at(
+        &mut self,
+        out: &mut [u8],
+        file_id: FileId,
+        type_: FileType,
+        communication: FileCommunication,
+        offset: u32,
+        data: &[u8],
+    ) -> impl Future<Output = Result<(), Error<IoBackendT::Error>>>;
+}
+
+impl<'card, IoBackendT> FileIo<'card, IoBackendT> for Card<'card, IoBackendT, Unauthenticated>
+where
+    IoBackendT: io::Backend,
+{
+    async fn read_file_at<'a>(
         &mut self,
         out: &'a mut [u8],
         file_id: FileId,
@@ -80,8 +109,7 @@ where
         Ok(response)
     }
 
-    /// Create a file within the currently open application.
-    pub async fn write_file_at(
+    async fn write_file_at(
         &mut self,
         out: &mut [u8],
         file_id: FileId,
@@ -121,12 +149,12 @@ where
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<'card, IoBackendT> FileIo<'card, IoBackendT> for Card<'card, IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {
     /// Read from a file
-    pub async fn read_file_at<'a>(
+    async fn read_file_at<'a>(
         &mut self,
         out: &'a mut [u8],
         file_id: FileId,
@@ -175,7 +203,7 @@ where
     }
 
     /// Create a file within the currently open application.
-    pub async fn write_file_at(
+    async fn write_file_at(
         &mut self,
         out: &mut [u8],
         file_id: FileId,
