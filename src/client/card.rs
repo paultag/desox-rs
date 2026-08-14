@@ -18,14 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-mod authenticated;
-mod default;
-mod unauthenticated;
-
-pub use authenticated::Authenticated;
-pub use default::CardIoDefault;
-pub use unauthenticated::Unauthenticated;
-
 use crate::{ApplicationId, io};
 
 /// Create a new struct for this command with an in-memory layout such that we

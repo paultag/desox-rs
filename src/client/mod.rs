@@ -24,6 +24,9 @@
 //! "escape hatch" when higher-level bindings are not quite cutting it.
 
 mod card;
+mod card_authenticated;
+mod card_default;
+mod card_unauthenticated;
 mod cmd_applications;
 mod cmd_authenticate;
 mod cmd_card_version;
@@ -35,15 +38,17 @@ mod handshake;
 mod keying;
 mod session;
 
-pub use card::{Authenticated, AuthenticationState, Card, Unauthenticated};
+pub use card::{AuthenticationState, Card};
+pub use card_authenticated::Authenticated;
+pub use card_unauthenticated::Unauthenticated;
 pub use cmd_file::FileIo;
 pub use keying::KeyingState;
 pub use session::Session;
 
 use card::{
-    CardIoDefault, command, command_cmac, command_encrypted_request, command_encrypted_response,
-    command_header,
+    command, command_cmac, command_encrypted_request, command_encrypted_response, command_header,
 };
+use card_default::CardIoDefault;
 pub(crate) use handshake::AuthenticateExt;
 
 /// Type alias for a card which is currently unauthenticated.
