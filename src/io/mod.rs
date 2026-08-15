@@ -25,6 +25,7 @@ mod crc;
 mod encrypted;
 mod mock;
 mod plain;
+mod tap;
 
 pub use cmac::{cmac_out_cmac_in, plain_out_cmac_in};
 pub(crate) use crc::check_crc32;
@@ -33,6 +34,7 @@ pub use mock::MockBackend;
 #[allow(unused_imports)]
 pub(crate) use mock::mock_backend;
 pub use plain::{plain, plain_multi};
+pub use tap::TapBackend;
 
 use crate::{
     StatusCode,

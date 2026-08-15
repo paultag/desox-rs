@@ -35,6 +35,8 @@
 //! This crate will (likely forever?) be partial, incomplete, and filled with
 //! nasal demons -- but the only goal is to reliably do the "basics".
 
+extern crate alloc;
+
 mod client;
 pub mod io;
 
@@ -91,7 +93,14 @@ pub type KeyId = u8;
 pub type FileId = u8;
 
 pub(crate) mod std {
-    pub use core::*;
+    pub use ::alloc::fmt;
+    pub use ::alloc::vec;
+    pub use ::core::convert;
+    pub use ::core::future;
+    pub use ::core::marker;
+    pub use ::core::mem;
+    pub use ::core::ops;
+    pub use ::core::sync;
 }
 
 // vim: foldmethod=marker
