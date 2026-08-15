@@ -63,7 +63,9 @@ where
         out: &'a mut [u8],
         application_id: ApplicationId,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
-        let (status_code, response) = command!((&mut self), out, {
+        let mut card = self.to_unauthenticated();
+
+        let (status_code, response) = command!((&mut card), out, {
             instruction: Instruction = Instruction::SelectApplication,
             application_id: ApplicationId = application_id
         }, 4, []);
@@ -76,10 +78,6 @@ where
             return Err(Error::BadStatusCode(status_code));
         }
 
-        // TODO: check if we're switching to the same application we're
-        // currently in and raise an error, since otherwise we'll transition
-        // to unauthenticated.
-        let mut card = self.to_unauthenticated();
         card.application_id = application_id;
         Ok(card)
     }

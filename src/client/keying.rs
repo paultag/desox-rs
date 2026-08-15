@@ -97,6 +97,9 @@ where
         data: &'a [u8],
         trailer: Option<&[u8]>,
     ) -> Result<&'a [u8], Error<IoBackendErrorT>> {
+        if data.len() < 8 {
+            return Err(Error::InvalidSignature);
+        }
         let (data, read_cmac) = data.split_at(data.len() - 8);
         let computed_cmac = self.generate_cmac_short(data, &[trailer.unwrap_or(&[])]);
 
