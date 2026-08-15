@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
+mod file_io;
+
 fn parse_replay(lines: &'static str) -> Vec<(Vec<u8>, Vec<u8>)> {
     lines
         .lines()
@@ -33,6 +35,25 @@ fn parse_replay(lines: &'static str) -> Vec<(Vec<u8>, Vec<u8>)> {
         .collect()
 }
 
-mod file_io;
+macro_rules! replay {
+    ($name:ident, $path:literal, |$card:ident| $body:tt) => {
+        #[tokio::test]
+        async fn $name() {
+            const REPLAY: &str = include_str!($path);
+
+            let transcript = $crate::replay::parse_replay(REPLAY);
+            let transcript = transcript
+                .iter()
+                .map(|(tx, rx)| (tx.as_slice(), rx.as_slice()))
+                .collect::<Vec<_>>();
+
+            let backend = $crate::io::MockBackend::new(&transcript);
+
+            let $card = $crate::Card::new(&backend);
+            $body
+        }
+    };
+}
+pub(crate) use replay;
 
 // vim: foldmethod=marker

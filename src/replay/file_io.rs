@@ -18,14 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-use super::parse_replay;
+use super::replay;
 use crate::{
-    Card, FileCommunication, FileIo, FilePermissions, FileSettings, FileType, Key, KeyCount,
-    KeySettings, KeySettingsApp, KeySettingsPicc, io::MockBackend,
+    FileCommunication, FileIo, FilePermissions, FileSettings, FileType, Key, KeyCount, KeySettings,
+    KeySettingsApp, KeySettingsPicc,
 };
-
-/// Replay of file-io
-const FILE_IO: &str = include_str!("file_io.replay");
 
 const TEST_STRING: &[u8] = b"\
 Had I the heavens' embroidered cloths,
@@ -38,19 +35,8 @@ I have spread my dreams under your feet;
 Tread softly because you tread on my dreams.
 ";
 
-#[tokio::test]
-async fn file_io() {
-    let transcript = parse_replay(FILE_IO);
-    let transcript = transcript
-        .iter()
-        .map(|(tx, rx)| (tx.as_slice(), rx.as_slice()))
-        .collect::<Vec<_>>();
-
-    let backend = MockBackend::new(&transcript);
-    let card = Card::new(&backend);
+replay!(file_io, "file_io.replay", |card| {
     let mut out = [0; 0xffff];
-
-    // actual test here
 
     let mut card = card
         .authenticate_with_rnd_a(
@@ -167,6 +153,6 @@ async fn file_io() {
         .await
         .unwrap();
     }
-}
+});
 
 // vim: foldmethod=marker
