@@ -59,7 +59,7 @@ where
     ///
     /// This consumes `self` and returns a new (unauthenticated) card.
     pub async fn select_application<'a>(
-        mut self,
+        self,
         out: &'a mut [u8],
         application_id: ApplicationId,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
