@@ -78,6 +78,62 @@ where
             authentication: Authenticated { session },
         })
     }
+
+    /// Authenticate (in the same way as we would with [Self::authenticate],
+    /// except hardcode the RND A half of the session key. This is almost
+    /// always a bad idea, except for testing (which is what I use it for).
+    /// You should basically never use this, and this may even go away in a
+    /// future release (or hide it behind a feature).
+    pub async fn authenticate_with_rnd_a(
+        self,
+        key_id: KeyId,
+        key: Key,
+        rnd_a: Key,
+    ) -> Result<Card<'card, IoBackendT, Authenticated>, Error<IoBackendT::Error>> {
+        let session: Session = match (rnd_a, key) {
+            (Key::Aes(rnd_a), Key::Aes(key)) => {
+                let session_key = AuthenticateExt::<16, aes::Aes128>::authenticate_with_rnd_a(
+                    &self.card,
+                    key_id,
+                    key,
+                    Some(rnd_a),
+                )
+                .await?;
+                Session::Aes {
+                    key_id,
+                    keying: KeyingState::<16, aes::Aes128>::new(session_key),
+                }
+            }
+            (Key::Des(rnd_a), Key::Des(key)) => {
+                let session_key = AuthenticateExt::<8, des::Des>::authenticate_with_rnd_a(
+                    &self.card,
+                    key_id,
+                    key,
+                    Some(rnd_a),
+                )
+                .await?;
+                Session::Des {
+                    key_id,
+                    keying: KeyingState::<8, des::Des>::new(session_key),
+                }
+            }
+            _ => {
+                panic!("rnd_a and key must be of the same type");
+            }
+        };
+
+        let Self {
+            card,
+            application_id,
+            authentication: _,
+        } = self;
+
+        Ok(Card {
+            card,
+            application_id,
+            authentication: Authenticated { session },
+        })
+    }
 }
 
 impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>

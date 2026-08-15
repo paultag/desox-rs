@@ -52,6 +52,8 @@ mod key_settings;
 mod padding;
 #[cfg(feature = "pcsc")]
 mod pcsc;
+#[cfg(test)]
+mod replay;
 mod status_code;
 mod version_info;
 

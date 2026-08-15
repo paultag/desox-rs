@@ -162,7 +162,7 @@ mod tests {
         assert_eq!(&card_version, response);
 
         let session_key = mb
-            .authenticate_with_rnb_a(0x00, [0x00; 8], Some(hex!("00 83 6D 4B F5 AA 65 27")))
+            .authenticate_with_rnd_a(0x00, [0x00; 8], Some(hex!("00 83 6D 4B F5 AA 65 27")))
             .await
             .unwrap();
         assert_eq!(hex!("00 82 6C 4A 02 B2 C2 70"), session_key);
