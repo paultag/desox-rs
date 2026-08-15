@@ -61,16 +61,16 @@ pub use client::{
 };
 pub use error::Error;
 pub use file::{FileCommunication, FilePermissions, FileSettings, FileType};
+pub use instruction::Instruction;
 pub use key::Key;
 pub use key_count::KeyCount;
 pub use key_settings::{KeySettings, KeySettingsApp, KeySettingsPicc};
+pub use status_code::StatusCode;
 pub use version_info::{DetailedVersionInfo, VersionInfo};
 
 use copy_to_slice::CopyToSlice;
 use crc::crc32;
-use instruction::Instruction;
 use padding::Padding;
-use status_code::StatusCode;
 
 /// MIFARE DESFire Cards all have a Unique ID ([Uid]). UIDs are 7 bytes long,
 /// and are generally only readable after authentication.
