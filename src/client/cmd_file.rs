@@ -53,7 +53,6 @@ where
         &mut self,
         out: &'a mut [u8],
         file_id: FileId,
-        type_: FileType,
         communication: FileCommunication,
         offset: u32,
         length: u32,
@@ -63,7 +62,6 @@ where
     fn write_file_at(
         &mut self,
         file_id: FileId,
-        type_: FileType,
         communication: FileCommunication,
         offset: u32,
         data: &[u8],
@@ -78,16 +76,10 @@ where
         &mut self,
         out: &'a mut [u8],
         file_id: FileId,
-        type_: FileType,
         communication: FileCommunication,
         offset: u32,
         length: u32,
     ) -> Result<&'a [u8], Error<IoBackendT::Error>> {
-        #[expect(irrefutable_let_patterns)]
-        let FileType::Data = type_ else {
-            unimplemented!();
-        };
-
         let (status_code, response) = match communication {
             FileCommunication::Plain | FileCommunication::Cmac => {
                 command!(self, out, {
@@ -112,16 +104,10 @@ where
     async fn write_file_at(
         &mut self,
         file_id: FileId,
-        type_: FileType,
         communication: FileCommunication,
         offset: u32,
         data: &[u8],
     ) -> Result<(), Error<IoBackendT::Error>> {
-        #[expect(irrefutable_let_patterns)]
-        let FileType::Data = type_ else {
-            unimplemented!();
-        };
-
         let (status_code, response) = match communication {
             FileCommunication::Plain | FileCommunication::Cmac => {
                 command_de_minimis!(self, {
@@ -157,16 +143,10 @@ where
         &mut self,
         out: &'a mut [u8],
         file_id: FileId,
-        type_: FileType,
         communication: FileCommunication,
         offset: u32,
         length: u32,
     ) -> Result<&'a [u8], Error<IoBackendT::Error>> {
-        #[expect(irrefutable_let_patterns)]
-        let FileType::Data = type_ else {
-            unimplemented!();
-        };
-
         let (status_code, response) = match communication {
             FileCommunication::Plain | FileCommunication::Cmac => {
                 command!(self, out, {
@@ -205,16 +185,10 @@ where
     async fn write_file_at(
         &mut self,
         file_id: FileId,
-        type_: FileType,
         communication: FileCommunication,
         offset: u32,
         data: &[u8],
     ) -> Result<(), Error<IoBackendT::Error>> {
-        #[expect(irrefutable_let_patterns)]
-        let FileType::Data = type_ else {
-            unimplemented!();
-        };
-
         let (status_code, response) = match communication {
             FileCommunication::Plain => {
                 command_de_minimis!(self, {

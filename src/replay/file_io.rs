@@ -128,20 +128,13 @@ replay!(file_io, "file_io.replay", |card| {
     for fid in [0x01, 0x02, 0x03] {
         let file_settings = card.get_file_settings(fid).await.unwrap();
 
-        card.write_file_at(
-            fid,
-            file_settings.type_,
-            file_settings.communication,
-            0,
-            TEST_STRING,
-        )
-        .await
-        .unwrap();
+        card.write_file_at(fid, file_settings.communication, 0, TEST_STRING)
+            .await
+            .unwrap();
 
         card.read_file_at(
             &mut out,
             fid,
-            file_settings.type_,
             file_settings.communication,
             0,
             file_settings.size,
