@@ -46,7 +46,8 @@ pub use keying::KeyingState;
 pub use session::Session;
 
 use card::{
-    command, command_cmac, command_encrypted_request, command_encrypted_response, command_header,
+    command, command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
+    command_encrypted_response, command_header,
 };
 use card_default::CardIoDefault;
 pub(crate) use handshake::AuthenticateExt;

@@ -59,6 +59,21 @@ where
             }
         })
     }
+
+    async fn default_exchange_multi_de_minimis<'a>(
+        &'a mut self,
+        header: &[u8],
+        data: &[&[u8]],
+    ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
+        Ok(match &mut self.authentication.session {
+            Session::Aes { keying, .. } => {
+                io::plain_out_cmac_in(&self.card, keying, &mut self.buf, header, data).await?
+            }
+            Session::Des { keying, .. } => {
+                io::plain_out_cmac_in(&self.card, keying, &mut self.buf, header, data).await?
+            }
+        })
+    }
 }
 
 impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
@@ -83,12 +98,14 @@ where
     pub fn to_unauthenticated(self) -> Card<'card, IoBackendT, Unauthenticated> {
         let Self {
             card,
+            buf,
             application_id,
             authentication: _,
         } = self;
 
         Card::<'card, IoBackendT, Unauthenticated> {
             card,
+            buf,
             application_id,
             authentication: Unauthenticated,
         }

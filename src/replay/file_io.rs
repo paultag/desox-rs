@@ -58,11 +58,11 @@ replay!(file_io, "file_io.replay", |card| {
     };
     let key_count = KeyCount::Aes(1);
 
-    card.create_application(&mut out, [1, 2, 3], key_settings, key_count)
+    card.create_application([1, 2, 3], key_settings, key_count)
         .await
         .unwrap();
 
-    let card = card.select_application(&mut out, [1, 2, 3]).await.unwrap();
+    let card = card.select_application([1, 2, 3]).await.unwrap();
     let mut card = card
         .authenticate_with_rnd_a(
             0x00,
@@ -75,7 +75,6 @@ replay!(file_io, "file_io.replay", |card| {
         .unwrap();
 
     card.create_file(
-        &mut out,
         0x01,
         FileSettings {
             type_: FileType::Data,
@@ -93,7 +92,6 @@ replay!(file_io, "file_io.replay", |card| {
     .unwrap();
 
     card.create_file(
-        &mut out,
         0x02,
         FileSettings {
             type_: FileType::Data,
@@ -111,7 +109,6 @@ replay!(file_io, "file_io.replay", |card| {
     .unwrap();
 
     card.create_file(
-        &mut out,
         0x03,
         FileSettings {
             type_: FileType::Data,
@@ -129,10 +126,9 @@ replay!(file_io, "file_io.replay", |card| {
     .unwrap();
 
     for fid in [0x01, 0x02, 0x03] {
-        let file_settings = card.get_file_settings(&mut out, fid).await.unwrap();
+        let file_settings = card.get_file_settings(fid).await.unwrap();
 
         card.write_file_at(
-            &mut out,
             fid,
             file_settings.type_,
             file_settings.communication,

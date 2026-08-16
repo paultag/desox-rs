@@ -19,8 +19,8 @@
 // THE SOFTWARE. }}}
 
 use super::{
-    Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command,
-    command_encrypted_request,
+    Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command_de_minimis,
+    command_encrypted_request_de_minimis,
 };
 use crate::{ApplicationId, Error, Instruction, Key, KeyCount, KeySettings, StatusCode, io};
 
@@ -58,14 +58,13 @@ where
     /// Select an application.
     ///
     /// This consumes `self` and returns a new (unauthenticated) card.
-    pub async fn select_application<'a>(
+    pub async fn select_application(
         self,
-        out: &'a mut [u8],
         application_id: ApplicationId,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
         let mut card = self.to_unauthenticated();
 
-        let (status_code, response) = command!((&mut card), out, {
+        let (status_code, response) = command_de_minimis!((&mut card), {
             instruction: Instruction = Instruction::SelectApplication,
             application_id: ApplicationId = application_id
         }, 4, []);
@@ -85,12 +84,11 @@ where
     /// Create an Application
     pub async fn create_application(
         &mut self,
-        out: &mut [u8],
         application_id: ApplicationId,
         key_settings: KeySettings,
         key_number: KeyCount,
     ) -> Result<(), Error<IoBackendT::Error>> {
-        let (status_code, response) = command!(self, out, {
+        let (status_code, response) = command_de_minimis!(self, {
             instruction: Instruction = Instruction::CreateApplication,
             application_id: ApplicationId = application_id,
             key_settings: u8 = key_settings.as_u8()?,
@@ -111,10 +109,9 @@ where
     /// Delete an application
     pub async fn delete_application(
         &mut self,
-        out: &mut [u8],
         application_id: ApplicationId,
     ) -> Result<(), Error<IoBackendT::Error>> {
-        let (status_code, response) = command!(self, out, {
+        let (status_code, response) = command_de_minimis!(self, {
             instruction: Instruction = Instruction::DeleteApplication,
             application_id: ApplicationId = application_id
         }, 4, []);
@@ -139,7 +136,6 @@ where
     /// create an application.
     pub async fn change_default_application_key(
         &mut self,
-        out: &mut [u8],
         key: Key,
         key_version: u8,
     ) -> Result<(), Error<IoBackendT::Error>> {
@@ -149,7 +145,7 @@ where
             Key::Des(key) => default_key[..8].copy_from_slice(&key),
         }
 
-        let (status_code, response) = command_encrypted_request!(self, out, {
+        let (status_code, response) = command_encrypted_request_de_minimis!(self, {
             instruction: Instruction = Instruction::SetConfiguration,
             configuration_key: u8 = 0x01
         }, 2, [&default_key, &[key_version]]);

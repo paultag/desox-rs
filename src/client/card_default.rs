@@ -65,6 +65,21 @@ where
         header: &[u8],
         data: &[&[u8]],
     ) -> impl Future<Output = Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>>>;
+
+    /// Do a [Self::default_exchange], but using the 'de minimis' buffer.
+    fn default_exchange_de_minimis<'a>(
+        &'a mut self,
+        input: &[u8],
+    ) -> impl Future<Output = Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>>> {
+        self.default_exchange_multi_de_minimis(input, &[])
+    }
+
+    /// Do a [Self::default_exchange_multi], but using the 'de minimis' buffer.
+    fn default_exchange_multi_de_minimis<'a>(
+        &'a mut self,
+        header: &[u8],
+        data: &[&[u8]],
+    ) -> impl Future<Output = Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>>>;
 }
 
 // vim: foldmethod=marker

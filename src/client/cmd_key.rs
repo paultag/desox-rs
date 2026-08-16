@@ -36,9 +36,8 @@ where
     pub async fn get_key_settings(
         &mut self,
     ) -> Result<(KeySettings, KeyCount), Error<IoBackendT::Error>> {
-        let mut out = [0; 0xff];
         let (status_code, &[key_settings, num_keys]) = self
-            .default_exchange(&mut out, &[Instruction::GetKeySettings as u8])
+            .default_exchange_de_minimis(&[Instruction::GetKeySettings as u8])
             .await?
         else {
             return Err(Error::BadSize);
@@ -56,9 +55,8 @@ where
 
     /// Return the version of a Key by ID
     pub async fn get_key_version(&mut self, key_id: KeyId) -> Result<u8, Error<IoBackendT::Error>> {
-        let mut out = [0; 0xff];
         let (status_code, &[key_version]) = self
-            .default_exchange(&mut out, &[Instruction::GetKeyVersion as u8, key_id])
+            .default_exchange_de_minimis(&[Instruction::GetKeyVersion as u8, key_id])
             .await?
         else {
             return Err(Error::BadSize);

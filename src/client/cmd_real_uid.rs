@@ -30,13 +30,13 @@ where
 {
     /// Get the MiFare card's globally unique 7-byte UID. This can only
     /// be done while authenticated -- and is sent back to us encrypted.
-    pub async fn get_uid(&mut self, out: &mut [u8]) -> Result<Uid, Error<IoBackendT::Error>> {
+    pub async fn get_uid(&mut self) -> Result<Uid, Error<IoBackendT::Error>> {
         let (status_code, response) = match &mut self.authentication.session {
             Session::Des { keying, .. } => {
                 io::plain_out_encrypted_in(
                     &self.card,
                     keying,
-                    out,
+                    &mut self.buf,
                     &[Instruction::GetUid as u8],
                     &[],
                 )
@@ -46,7 +46,7 @@ where
                 io::plain_out_encrypted_in(
                     &self.card,
                     keying,
-                    out,
+                    &mut self.buf,
                     &[Instruction::GetUid as u8],
                     &[],
                 )

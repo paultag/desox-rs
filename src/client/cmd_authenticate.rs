@@ -68,12 +68,14 @@ where
 
         let Self {
             card,
+            buf,
             application_id,
             authentication: _,
         } = self;
 
         Ok(Card {
             card,
+            buf,
             application_id,
             authentication: Authenticated { session },
         })
@@ -124,12 +126,14 @@ where
 
         let Self {
             card,
+            buf,
             application_id,
             authentication: _,
         } = self;
 
         Ok(Card {
             card,
+            buf,
             application_id,
             authentication: Authenticated { session },
         })
@@ -142,8 +146,7 @@ where
 {
     /// Change the currently authenticated key ID to something new (`new_key`).
     pub async fn change_current_key(
-        self,
-        out: &mut [u8],
+        mut self,
         new_key: Key,
         new_key_version: u8,
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
@@ -168,9 +171,10 @@ where
         }, 2);
 
         let Self {
-            mut authentication,
-            application_id,
             card,
+            buf,
+            application_id,
+            mut authentication,
         } = self;
 
         // We can't use command_encrypted_request here because the response
@@ -189,7 +193,7 @@ where
                 io::encrypted_out_plain_in(
                     &card,
                     keying,
-                    out,
+                    &mut self.buf,
                     &header,
                     &[&key, &[new_key_version], &crc],
                 )
@@ -203,8 +207,14 @@ where
                 // [CHPW] [KEY ID] [ KEY ] [ PAD TO 16 ] [ CRC ]
                 //
                 let crc = crc32(&header, &[&key, &[0; 8]]).to_le_bytes();
-                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key, &[0; 8], &crc])
-                    .await?
+                io::encrypted_out_plain_in(
+                    &card,
+                    keying,
+                    &mut self.buf,
+                    &header,
+                    &[&key, &[0; 8], &crc],
+                )
+                .await?
             }
             (Session::Des { keying, .. }, Key::Aes(key)) => {
                 // Changing DES key to a new AES key (nice)
@@ -215,7 +225,7 @@ where
                 io::encrypted_out_plain_in(
                     &card,
                     keying,
-                    out,
+                    &mut self.buf,
                     &header,
                     &[&key, &[new_key_version], &crc],
                 )
@@ -227,7 +237,8 @@ where
                 // [CHPW] [KEY ID] [   KEY   ] [ CRC ]
                 //
                 let crc = crc32(&header, &[&key]).to_le_bytes();
-                io::encrypted_out_plain_in(&card, keying, out, &header, &[&key, &crc]).await?
+                io::encrypted_out_plain_in(&card, keying, &mut self.buf, &header, &[&key, &crc])
+                    .await?
             }
         };
 
@@ -240,9 +251,10 @@ where
         }
 
         Ok(Card {
-            authentication: Unauthenticated,
-            application_id,
             card,
+            buf,
+            application_id,
+            authentication: Unauthenticated,
         })
     }
 
@@ -250,7 +262,6 @@ where
     /// This requires that we prove knowledge of the current key.
     pub async fn change_key(
         &mut self,
-        out: &mut [u8],
         key_id: KeyId,
         current_key: Key,
         new_key: Key,
@@ -291,7 +302,7 @@ where
                 io::encrypted_out_cmac_in(
                     &self.card,
                     keying,
-                    out,
+                    &mut self.buf,
                     &header,
                     &[&key, &[new_key_version], &crc, &new_key_crc],
                 )
@@ -302,7 +313,7 @@ where
                 io::encrypted_out_cmac_in(
                     &self.card,
                     keying,
-                    out,
+                    &mut self.buf,
                     &header,
                     &[&key, &crc, &new_key_crc],
                 )

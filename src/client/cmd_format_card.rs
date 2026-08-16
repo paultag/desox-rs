@@ -29,9 +29,9 @@ where
     IoBackendT: io::Backend,
 {
     /// Format the card, resetting it back to the default state.
-    pub async fn format(&mut self, out: &mut [u8]) -> Result<(), Error<IoBackendT::Error>> {
+    pub async fn format(&mut self) -> Result<(), Error<IoBackendT::Error>> {
         let (status_code, &[]) = self
-            .default_exchange(out, &[Instruction::FormatCard as u8])
+            .default_exchange_de_minimis(&[Instruction::FormatCard as u8])
             .await?
         else {
             return Err(Error::BadSize);

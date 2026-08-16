@@ -39,6 +39,14 @@ where
     ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
         io::plain_multi(&self.card, output, header, data).await
     }
+
+    async fn default_exchange_multi_de_minimis<'a>(
+        &'a mut self,
+        header: &[u8],
+        data: &[&[u8]],
+    ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
+        io::plain_multi(&self.card, &mut self.buf, header, data).await
+    }
 }
 
 impl<'card, IoBackendT> Card<'card, IoBackendT, Unauthenticated>
@@ -49,6 +57,7 @@ where
     pub fn new(card: &'card IoBackendT) -> Self {
         Self {
             card,
+            buf: [0; 60],
             application_id: [0x00, 0x00, 0x00],
             authentication: Unauthenticated,
         }

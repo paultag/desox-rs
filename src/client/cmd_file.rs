@@ -23,7 +23,8 @@ use crate::{
     StatusCode,
     client::{
         Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command,
-        command_cmac, command_encrypted_request, command_encrypted_response,
+        command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
+        command_encrypted_response,
     },
     io,
 };
@@ -61,7 +62,6 @@ where
     /// Write to a file
     fn write_file_at(
         &mut self,
-        out: &mut [u8],
         file_id: FileId,
         type_: FileType,
         communication: FileCommunication,
@@ -111,7 +111,6 @@ where
 
     async fn write_file_at(
         &mut self,
-        out: &mut [u8],
         file_id: FileId,
         type_: FileType,
         communication: FileCommunication,
@@ -125,7 +124,7 @@ where
 
         let (status_code, response) = match communication {
             FileCommunication::Plain | FileCommunication::Cmac => {
-                command!(self, out, {
+                command_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
@@ -205,7 +204,6 @@ where
     /// Create a file within the currently open application.
     async fn write_file_at(
         &mut self,
-        out: &mut [u8],
         file_id: FileId,
         type_: FileType,
         communication: FileCommunication,
@@ -219,7 +217,7 @@ where
 
         let (status_code, response) = match communication {
             FileCommunication::Plain => {
-                command!(self, out, {
+                command_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
@@ -227,7 +225,7 @@ where
         }, 8, [data])
             }
             FileCommunication::Cmac => {
-                command_cmac!(self, out, {
+                command_cmac_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
@@ -235,7 +233,7 @@ where
         }, 8, [data])
             }
             FileCommunication::Encrypted => {
-                command_encrypted_request!(self, out, {
+                command_encrypted_request_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
             offset: [u8; 3] = ToU24::to_le_bytes(offset),
@@ -280,10 +278,9 @@ where
     /// Read from a file
     pub async fn get_file_settings(
         &mut self,
-        out: &mut [u8],
         file_id: FileId,
     ) -> Result<FileSettings, Error<IoBackendT::Error>> {
-        let (status_code, response) = command!(self, out, {
+        let (status_code, response) = command_de_minimis!(self, {
             instruction: Instruction = Instruction::GetFileSettings,
             file_id: u8 = file_id
         }, 2, []);
@@ -312,7 +309,6 @@ where
     /// Create a file within the currently open application.
     pub async fn create_file(
         &mut self,
-        out: &mut [u8],
         file_id: FileId,
         settings: FileSettings,
     ) -> Result<(), Error<IoBackendT::Error>> {
@@ -328,7 +324,7 @@ where
             unimplemented!();
         };
 
-        let (status_code, response) = command!(self, out, {
+        let (status_code, response) = command_de_minimis!(self, {
             instruction: Instruction = Instruction::CreateDataFile,
             file_id: u8 = file_id,
             communication: u8 = communication.as_u8(),
@@ -348,12 +344,8 @@ where
     }
 
     /// Delete a file
-    pub async fn delete_file(
-        &mut self,
-        out: &mut [u8],
-        file_id: FileId,
-    ) -> Result<(), Error<IoBackendT::Error>> {
-        let (status_code, response) = command!(self, out, {
+    pub async fn delete_file(&mut self, file_id: FileId) -> Result<(), Error<IoBackendT::Error>> {
+        let (status_code, response) = command_de_minimis!(self, {
             instruction: Instruction = Instruction::DeleteFile,
             file_id: FileId = file_id
         }, 2, []);
@@ -370,12 +362,9 @@ where
     }
 
     /// Get the amount of free memory remaining on the card
-    pub async fn get_free_memory(
-        &mut self,
-        out: &mut [u8],
-    ) -> Result<u32, Error<IoBackendT::Error>> {
+    pub async fn get_free_memory(&mut self) -> Result<u32, Error<IoBackendT::Error>> {
         let (status_code, &[s1, s2, s3]) = self
-            .default_exchange(out, &[Instruction::GetFreeMemory as u8])
+            .default_exchange_de_minimis(&[Instruction::GetFreeMemory as u8])
             .await?
         else {
             return Err(Error::BadSize);
