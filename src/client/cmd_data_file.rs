@@ -19,7 +19,8 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    Error, FileCommunication, FileId, FilePermissions, FileSettings, Instruction, StatusCode, U24,
+    Error, FileCommunication, FileId, FilePermissions, FileSettings, FileType, Instruction,
+    StatusCode, U24,
     client::{
         Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command,
         command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
@@ -254,14 +255,27 @@ where
             return Err(Error::BadSize);
         };
 
+        let type_ = FileType::from_u8(response[0])?;
         let communication = FileCommunication::from_u8(response[1])?;
         let permissions = FilePermissions::from_bytes([response[2], response[3]])?;
-        let size = U24::from_le_bytes([response[4], response[5], response[6]]);
 
-        Ok(FileSettings::Data {
-            communication,
-            permissions,
-            size,
+        Ok(match type_ {
+            FileType::Data => {
+                let size = U24::from_le_bytes([response[4], response[5], response[6]]);
+                FileSettings::Data {
+                    communication,
+                    permissions,
+                    size,
+                }
+            }
+            FileType::Backup => {
+                let size = U24::from_le_bytes([response[4], response[5], response[6]]);
+                FileSettings::Backup {
+                    communication,
+                    permissions,
+                    size,
+                }
+            }
         })
     }
 
