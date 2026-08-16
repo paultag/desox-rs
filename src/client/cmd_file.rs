@@ -20,7 +20,7 @@
 
 use crate::{
     Error, FileCommunication, FileId, FilePermissions, FileSettings, FileType, Instruction,
-    StatusCode,
+    StatusCode, U24,
     client::{
         Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command,
         command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
@@ -28,18 +28,6 @@ use crate::{
     },
     io,
 };
-
-trait ToU24 {
-    fn to_le_bytes(self) -> [u8; 3];
-}
-
-impl ToU24 for u32 {
-    fn to_le_bytes(self) -> [u8; 3] {
-        let size: [u8; 4] = u32::to_le_bytes(self);
-        let size: [u8; 3] = [size[0], size[1], size[2]];
-        size
-    }
-}
 
 /// Trait to handle file i/o (be it authenticated or not!) -- this is a trait
 /// because the specific way we talk to a file changes depending on
@@ -85,8 +73,8 @@ where
                 command!(self, out, {
                     instruction: Instruction = Instruction::ReadDataFile,
                     file_id: u8 = file_id,
-                    offset: [u8; 3] = ToU24::to_le_bytes(offset),
-                    length: [u8; 3] = ToU24::to_le_bytes(length)
+                    offset: [u8; 3] = U24::to_le_bytes(offset),
+                    length: [u8; 3] = U24::to_le_bytes(length)
                 }, 8, [])
             }
             FileCommunication::Encrypted => {
@@ -113,8 +101,8 @@ where
                 command_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
-            offset: [u8; 3] = ToU24::to_le_bytes(offset),
-            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+            offset: [u8; 3] = U24::to_le_bytes(offset),
+            size: [u8; 3] = U24::to_le_bytes(data.len() as u32)
         }, 8, [data])
             }
             FileCommunication::Encrypted => {
@@ -152,16 +140,16 @@ where
                 command!(self, out, {
                     instruction: Instruction = Instruction::ReadDataFile,
                     file_id: u8 = file_id,
-                    offset: [u8; 3] = ToU24::to_le_bytes(offset),
-                    length: [u8; 3] = ToU24::to_le_bytes(length)
+                    offset: [u8; 3] = U24::to_le_bytes(offset),
+                    length: [u8; 3] = U24::to_le_bytes(length)
                 }, 8, [])
             }
             FileCommunication::Encrypted => {
                 command_encrypted_response!(self, out, {
                     instruction: Instruction = Instruction::ReadDataFile,
                     file_id: u8 = file_id,
-                    offset: [u8; 3] = ToU24::to_le_bytes(offset),
-                    length: [u8; 3] = ToU24::to_le_bytes(length)
+                    offset: [u8; 3] = U24::to_le_bytes(offset),
+                    length: [u8; 3] = U24::to_le_bytes(length)
                 }, 8, [])
             }
         };
@@ -194,24 +182,24 @@ where
                 command_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
-            offset: [u8; 3] = ToU24::to_le_bytes(offset),
-            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+            offset: [u8; 3] = U24::to_le_bytes(offset),
+            size: [u8; 3] = U24::to_le_bytes(data.len() as u32)
         }, 8, [data])
             }
             FileCommunication::Cmac => {
                 command_cmac_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
-            offset: [u8; 3] = ToU24::to_le_bytes(offset),
-            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+            offset: [u8; 3] = U24::to_le_bytes(offset),
+            size: [u8; 3] = U24::to_le_bytes(data.len() as u32)
         }, 8, [data])
             }
             FileCommunication::Encrypted => {
                 command_encrypted_request_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
-            offset: [u8; 3] = ToU24::to_le_bytes(offset),
-            size: [u8; 3] = ToU24::to_le_bytes(data.len() as u32)
+            offset: [u8; 3] = U24::to_le_bytes(offset),
+            size: [u8; 3] = U24::to_le_bytes(data.len() as u32)
         }, 8, [data])
             }
         };
@@ -270,7 +258,7 @@ where
         let type_ = FileType::from_u8(response[0])?;
         let communication = FileCommunication::from_u8(response[1])?;
         let permissions = FilePermissions::from_bytes([response[2], response[3]])?;
-        let size = u32::from_le_bytes([response[4], response[5], response[6], 0x00]);
+        let size = U24::from_le_bytes([response[4], response[5], response[6]]);
 
         Ok(FileSettings {
             type_,
@@ -303,7 +291,7 @@ where
             file_id: u8 = file_id,
             communication: u8 = communication.as_u8(),
             permissions: [u8; 2] = permissions.as_bytes()?,
-            size: [u8; 3] = ToU24::to_le_bytes(size)
+            size: [u8; 3] = U24::to_le_bytes(size)
         }, 8, []);
 
         if !response.is_empty() {
@@ -348,7 +336,7 @@ where
             return Err(Error::BadStatusCode(status_code));
         }
 
-        let size = u32::from_le_bytes([s1, s2, s3, 0x00]);
+        let size = U24::from_le_bytes([s1, s2, s3]);
         Ok(size)
     }
 }

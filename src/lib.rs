@@ -55,6 +55,7 @@ mod permissions;
 #[cfg(test)]
 mod replay;
 mod status_code;
+mod u24;
 mod version_info;
 
 pub use client::{
@@ -73,6 +74,7 @@ pub use version_info::{DetailedVersionInfo, VersionInfo};
 use copy_to_slice::CopyToSlice;
 use crc::crc32;
 use padding::Padding;
+use u24::U24;
 
 /// MIFARE DESFire Cards all have a Unique ID ([Uid]). UIDs are 7 bytes long,
 /// and are generally only readable after authentication.
