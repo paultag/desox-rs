@@ -30,7 +30,7 @@ mod card_unauthenticated;
 mod cmd_applications;
 mod cmd_authenticate;
 mod cmd_card_version;
-mod cmd_file;
+mod cmd_data_file;
 mod cmd_format_card;
 mod cmd_key;
 mod cmd_real_uid;
@@ -41,7 +41,7 @@ mod session;
 pub use card::{AuthenticationState, Card};
 pub use card_authenticated::Authenticated;
 pub use card_unauthenticated::Unauthenticated;
-pub use cmd_file::FileIo;
+pub use cmd_data_file::FileIo;
 pub use keying::KeyingState;
 pub use session::Session;
 
