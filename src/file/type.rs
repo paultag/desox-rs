@@ -27,6 +27,16 @@ pub enum FileType {
     /// "Normal" data file. There's a few other types, but I don't have
     /// the ability to create them yet.
     Data = 0x00,
+
+    /// Data file with a second copy on the EEPROM. This allows writes to be
+    /// done and then "commited" while allowing for a rollback at the cost of
+    /// 2x the EEPROM data footprint.
+    Backup = 0x01,
+    //
+    // /// Unsigned 32 bit integer value that can be manipulated.
+    // Value = 0x02,
+    // LinearRecord = 0x03,
+    // CyclicRecord = 0x04,
 }
 
 impl FileType {

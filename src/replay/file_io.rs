@@ -20,8 +20,8 @@
 
 use super::replay;
 use crate::{
-    AppPermissions, FileCommunication, FileIo, FilePermissions, FileSettings, FileType, Key,
-    KeyCount, KeyPermissions, Permissions,
+    AppPermissions, FileCommunication, FileIo, FilePermissions, FileSettings, Key, KeyCount,
+    KeyPermissions, Permissions,
 };
 
 const TEST_STRING: &[u8] = b"\
@@ -76,8 +76,7 @@ replay!(file_io, "file_io.replay", |card| {
 
     card.create_file(
         0x01,
-        FileSettings {
-            type_: FileType::Data,
+        FileSettings::Data {
             communication: FileCommunication::Plain,
             permissions: FilePermissions {
                 change: 0x00,
@@ -93,8 +92,7 @@ replay!(file_io, "file_io.replay", |card| {
 
     card.create_file(
         0x02,
-        FileSettings {
-            type_: FileType::Data,
+        FileSettings::Data {
             communication: FileCommunication::Cmac,
             permissions: FilePermissions {
                 change: 0x00,
@@ -110,8 +108,7 @@ replay!(file_io, "file_io.replay", |card| {
 
     card.create_file(
         0x03,
-        FileSettings {
-            type_: FileType::Data,
+        FileSettings::Data {
             communication: FileCommunication::Encrypted,
             permissions: FilePermissions {
                 change: 0x00,
@@ -126,21 +123,22 @@ replay!(file_io, "file_io.replay", |card| {
     .unwrap();
 
     for fid in [0x01, 0x02, 0x03] {
-        let file_settings = card.get_file_settings(fid).await.unwrap();
+        let FileSettings::Data {
+            communication,
+            size,
+            ..
+        } = card.get_file_settings(fid).await.unwrap()
+        else {
+            panic!("not a data file?");
+        };
 
-        card.write_file_at(fid, file_settings.communication, 0, TEST_STRING)
+        card.write_file_at(fid, communication, 0, TEST_STRING)
             .await
             .unwrap();
 
-        card.read_file_at(
-            &mut out,
-            fid,
-            file_settings.communication,
-            0,
-            file_settings.size,
-        )
-        .await
-        .unwrap();
+        card.read_file_at(&mut out, fid, communication, 0, size)
+            .await
+            .unwrap();
     }
 });
 

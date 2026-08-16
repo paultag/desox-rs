@@ -28,18 +28,48 @@ pub use r#type::FileType;
 
 /// File settings
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct FileSettings {
-    /// File Type
-    pub type_: FileType,
+pub enum FileSettings {
+    /// File Settings for a Data File
+    Data {
+        /// File Communication
+        communication: FileCommunication,
 
-    /// File Communication
-    pub communication: FileCommunication,
+        /// File Permissions
+        permissions: FilePermissions,
 
-    /// File Permissions
-    pub permissions: FilePermissions,
+        /// File Size
+        size: u32,
+    },
 
-    /// File Size
-    pub size: u32,
+    /// File Settings for a Backup File
+    Backup {
+        /// File Communication
+        communication: FileCommunication,
+
+        /// File Permissions
+        permissions: FilePermissions,
+
+        /// File Size
+        size: u32,
+    },
+}
+
+impl FileSettings {
+    /// Return the [FileType] for the underlying File.
+    pub fn type_(&self) -> FileType {
+        match self {
+            Self::Data { .. } => FileType::Data,
+            Self::Backup { .. } => FileType::Backup,
+        }
+    }
+
+    /// Return the [FileType] for the underlying File.
+    pub fn communication(&self) -> FileCommunication {
+        match self {
+            Self::Data { communication, .. } => *communication,
+            Self::Backup { communication, .. } => *communication,
+        }
+    }
 }
 
 // vim: foldmethod=marker
