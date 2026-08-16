@@ -48,10 +48,10 @@ mod file;
 mod instruction;
 mod key;
 mod key_count;
-mod key_settings;
 mod padding;
 #[cfg(feature = "pcsc")]
 mod pcsc;
+mod permissions;
 #[cfg(test)]
 mod replay;
 mod status_code;
@@ -66,7 +66,7 @@ pub use file::{FileCommunication, FilePermissions, FileSettings, FileType};
 pub use instruction::Instruction;
 pub use key::Key;
 pub use key_count::KeyCount;
-pub use key_settings::{KeySettings, KeySettingsApp, KeySettingsPicc};
+pub use permissions::{AppPermissions, KeyPermissions, Permissions};
 pub use status_code::StatusCode;
 pub use version_info::{DetailedVersionInfo, VersionInfo};
 

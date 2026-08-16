@@ -20,27 +20,29 @@
 
 use crate::{Error, KeyId};
 
-/// Global (PICC-wide) and Application-specific configuration surrounding
-/// permissions regarding keying material.
+/// Global (PICC-wide) and Application-specific permissions and
+/// configuration.
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct KeySettings {
-    /// Key Settings specific to the PICC Key.
-    pub picc: KeySettingsPicc,
+pub struct Permissions {
+    /// Permissions regarding what operations can be done in what
+    /// state(s).
+    pub app: AppPermissions,
 
-    /// Key Settings specific to the Application Key(s).
-    pub app: KeySettingsApp,
+    /// Permissions regarding key changes (specifically) within the current
+    /// Application.
+    pub key: KeyPermissions,
 }
 
-impl KeySettings {
+impl Permissions {
     /// Default default application MIFARE DESFire EV3 key settings (0x0F)
     pub const FACTORY_DEFAULT: Self = Self {
-        picc: KeySettingsPicc {
+        app: AppPermissions {
             can_change_key_settings: true,
             can_change_picc_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
-        app: KeySettingsApp::RequiresPicc,
+        key: KeyPermissions::RequiresPicc,
     };
 }
 
@@ -48,7 +50,7 @@ impl KeySettings {
 /// to take card-wide destructive actions, such as creating or deleting
 /// applications, changing key permissions, or changing the PICC key.
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct KeySettingsPicc {
+pub struct AppPermissions {
     /// If true, the key settings (like, this very configuration!) can be
     /// changed. If false, these settings are locked in forever.
     pub can_change_key_settings: bool,
@@ -67,13 +69,13 @@ pub struct KeySettingsPicc {
     pub anyone_can_list: bool,
 }
 
-impl KeySettingsPicc {
+impl AppPermissions {
     const CAN_CHANGE_PICC_KEY: u8 = 0x01;
     const ANYONE_CAN_LIST: u8 = 0x02;
     const ANYONE_CAN_DELETE: u8 = 0x04;
     const CAN_CHANGE_KEY_SETTINGS: u8 = 0x08;
 
-    /// Create a new [KeySettingsPicc] from the provided [KeySettings] encoded
+    /// Create a new [AppPermissions] from the provided [Permissions] encoded
     /// value.
     fn from_u8(ks: u8) -> Self {
         Self {
@@ -84,7 +86,7 @@ impl KeySettingsPicc {
         }
     }
 
-    /// Create a new [KeySettings] encoded value.
+    /// Create a new [Permissions] encoded value.
     pub fn as_u8(&self) -> u8 {
         (if self.can_change_picc_key {
             Self::CAN_CHANGE_PICC_KEY
@@ -109,7 +111,7 @@ impl KeySettingsPicc {
 /// Application-specific Key settings. This defines what key is required to
 /// be used when taking specific keying actions.
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum KeySettingsApp {
+pub enum KeyPermissions {
     /// Changing an Application key requires authentication with
     /// the PICC Key ("master key").
     RequiresPicc,
@@ -127,8 +129,8 @@ pub enum KeySettingsApp {
     Frozen,
 }
 
-impl KeySettingsApp {
-    /// Create a new [KeySettingsApp] from the provided [KeySettings] encoded
+impl KeyPermissions {
+    /// Create a new [KeyPermissions] from the provided [Permissions] encoded
     /// value.
     fn from_u8(ks: u8) -> Self {
         match ks >> 4 {
@@ -139,7 +141,7 @@ impl KeySettingsApp {
         }
     }
 
-    /// Create a new [KeySettings] encoded value.
+    /// Create a new [Permissions] encoded value.
     ///
     /// 'IoBackendErrorT' is generic here because [Error] requires it, this
     /// function does not conduct any I/O on its own. We will never return an
@@ -155,23 +157,23 @@ impl KeySettingsApp {
     }
 }
 
-impl KeySettings {
-    /// Create a new [KeySettings] from the provided [KeySettings] encoded
+impl Permissions {
+    /// Create a new [Permissions] from the provided [Permissions] encoded
     /// value.
     pub fn from_u8(ks: u8) -> Self {
         Self {
-            picc: KeySettingsPicc::from_u8(ks),
-            app: KeySettingsApp::from_u8(ks),
+            app: AppPermissions::from_u8(ks),
+            key: KeyPermissions::from_u8(ks),
         }
     }
 
-    /// Create a new [KeySettings] encoded value.
+    /// Create a new [Permissions] encoded value.
     ///
     /// 'IoBackendErrorT' is generic here because [Error] requires it, this
     /// function does not conduct any I/O on its own. We will never return an
     /// [Error::IoBackend], so this is purely for sizing/checking.
     pub fn as_u8<IoBackendErrorT>(&self) -> Result<u8, Error<IoBackendErrorT>> {
-        Ok(self.picc.as_u8() | self.app.as_u8()?)
+        Ok(self.app.as_u8() | self.key.as_u8()?)
     }
 }
 
@@ -182,7 +184,7 @@ mod tests {
     #[test]
     fn every_settings_round_trips() {
         for key_settings in 0..0xff {
-            let key_settings_parsed = KeySettings::from_u8(key_settings);
+            let key_settings_parsed = Permissions::from_u8(key_settings);
             let key_settings_rt = key_settings_parsed.as_u8::<()>().unwrap();
             assert_eq!(key_settings, key_settings_rt);
         }
@@ -192,7 +194,7 @@ mod tests {
         ($name:ident { $settings:expr, $key_settings:expr }) => {
             #[test]
             fn $name() {
-                let key_settings = KeySettings::from_u8($settings);
+                let key_settings = Permissions::from_u8($settings);
                 assert_eq!($key_settings, key_settings);
                 let key_settings_u8 = key_settings.as_u8::<()>().unwrap();
                 assert_eq!($settings, key_settings_u8);
@@ -200,26 +202,26 @@ mod tests {
         };
     }
 
-    test_key_settings!(test_factory_default { 0x0F, KeySettings::FACTORY_DEFAULT });
+    test_key_settings!(test_factory_default { 0x0F, Permissions::FACTORY_DEFAULT });
 
-    test_key_settings!(test_app_frozen { 0x00, KeySettings {
-        picc: KeySettingsPicc {
+    test_key_settings!(test_app_frozen { 0x00, Permissions {
+        app: AppPermissions {
             can_change_key_settings: false,
             can_change_picc_key: false,
             anyone_can_delete: false,
             anyone_can_list: false,
         },
-        app: KeySettingsApp::RequiresPicc,
+        key: KeyPermissions::RequiresPicc,
     } });
 
-    test_key_settings!(test_app_a { 0xAF, KeySettings {
-        picc: KeySettingsPicc {
+    test_key_settings!(test_app_a { 0xAF, Permissions {
+        app: AppPermissions {
             can_change_key_settings: true,
             can_change_picc_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
-        app: KeySettingsApp::RequiresAppKey(10),
+        key: KeyPermissions::RequiresAppKey(10),
     } });
 
     macro_rules! test_bad_key_settings {
@@ -231,24 +233,24 @@ mod tests {
         };
     }
 
-    test_bad_key_settings!(test_bad_app_0 { KeySettings {
-        picc: KeySettingsPicc {
+    test_bad_key_settings!(test_bad_app_0 { Permissions {
+        app: AppPermissions {
             can_change_key_settings: true,
             can_change_picc_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
-        app: KeySettingsApp::RequiresAppKey(0),
+        key: KeyPermissions::RequiresAppKey(0),
     } });
 
-    test_bad_key_settings!(test_bad_app_e { KeySettings {
-        picc: KeySettingsPicc {
+    test_bad_key_settings!(test_bad_app_e { Permissions {
+        app: AppPermissions {
             can_change_key_settings: true,
             can_change_picc_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
-        app: KeySettingsApp::RequiresAppKey(0xE),
+        key: KeyPermissions::RequiresAppKey(0xE),
     } });
 }
 

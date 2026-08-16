@@ -20,8 +20,8 @@
 
 use super::replay;
 use crate::{
-    FileCommunication, FileIo, FilePermissions, FileSettings, FileType, Key, KeyCount, KeySettings,
-    KeySettingsApp, KeySettingsPicc,
+    AppPermissions, FileCommunication, FileIo, FilePermissions, FileSettings, FileType, Key,
+    KeyCount, KeyPermissions, Permissions,
 };
 
 const TEST_STRING: &[u8] = b"\
@@ -47,14 +47,14 @@ replay!(file_io, "file_io.replay", |card| {
         .await
         .unwrap();
 
-    let key_settings = KeySettings {
-        picc: KeySettingsPicc {
+    let key_settings = Permissions {
+        app: AppPermissions {
             can_change_key_settings: true,
             can_change_picc_key: true,
             anyone_can_delete: false,
             anyone_can_list: false,
         },
-        app: KeySettingsApp::RequiresPicc,
+        key: KeyPermissions::RequiresPicc,
     };
     let key_count = KeyCount::Aes(1);
 

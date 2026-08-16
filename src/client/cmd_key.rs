@@ -19,7 +19,7 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    Error, Instruction, KeyCount, KeyId, KeySettings, StatusCode,
+    Error, Instruction, KeyCount, KeyId, Permissions, StatusCode,
     client::{AuthenticationState, Card, CardIoDefault},
     io,
 };
@@ -35,7 +35,7 @@ where
     /// of keys present (1st element of the returned tuple).
     pub async fn get_key_settings(
         &mut self,
-    ) -> Result<(KeySettings, KeyCount), Error<IoBackendT::Error>> {
+    ) -> Result<(Permissions, KeyCount), Error<IoBackendT::Error>> {
         let (status_code, &[key_settings, num_keys]) = self
             .default_exchange_de_minimis(&[Instruction::GetKeySettings as u8])
             .await?
@@ -48,7 +48,7 @@ where
         }
 
         Ok((
-            KeySettings::from_u8(key_settings),
+            Permissions::from_u8(key_settings),
             KeyCount::from_u8(num_keys)?,
         ))
     }

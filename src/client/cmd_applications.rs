@@ -22,7 +22,7 @@ use super::{
     Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command_de_minimis,
     command_encrypted_request_de_minimis,
 };
-use crate::{ApplicationId, Error, Instruction, Key, KeyCount, KeySettings, StatusCode, io};
+use crate::{ApplicationId, Error, Instruction, Key, KeyCount, Permissions, StatusCode, io};
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
 where
@@ -85,7 +85,7 @@ where
     pub async fn create_application(
         &mut self,
         application_id: ApplicationId,
-        key_settings: KeySettings,
+        key_settings: Permissions,
         key_number: KeyCount,
     ) -> Result<(), Error<IoBackendT::Error>> {
         let (status_code, response) = command_de_minimis!(self, {
