@@ -123,4 +123,46 @@ replay!(
     }
 );
 
+replay!(
+    key_change_picc_round_the_world,
+    "key_change_picc_round_the_world.replay",
+    |card| {
+        // DES default -> 2
+        let card = card
+            .authenticate_with_rnd_a(0x00, Key::Des([0; 8]), Key::Des([1; 8]))
+            .await
+            .unwrap()
+            .change_current_key(Key::Des([2; 8]), 0)
+            .await
+            .unwrap();
+
+        // DES 2 -> AES default
+        let card = card
+            .authenticate_with_rnd_a(0x00, Key::Des([2; 8]), Key::Des([2; 8]))
+            .await
+            .unwrap()
+            .change_current_key(Key::Aes([0; 16]), 0)
+            .await
+            .unwrap();
+
+        // AES default -> AES 1
+        let card = card
+            .authenticate_with_rnd_a(0x00, Key::Aes([0; 16]), Key::Aes([3; 16]))
+            .await
+            .unwrap()
+            .change_current_key(Key::Aes([1; 16]), 0)
+            .await
+            .unwrap();
+
+        // AES 1 -> DES default
+        let card = card
+            .authenticate_with_rnd_a(0x00, Key::Aes([1; 16]), Key::Aes([4; 16]))
+            .await
+            .unwrap()
+            .change_current_key(Key::Des([0; 8]), 0)
+            .await
+            .unwrap();
+    }
+);
+
 // vim: foldmethod=marker
