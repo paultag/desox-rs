@@ -7,6 +7,9 @@ authors = ["Paul Tagliamonte <paultag@gmail.com>"]
 repository = "https://github.com/paultag/desox-rs"
 description = "(incomplete) MIFARE DESFire EV3 APDU bindings."
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(desox_replay_rw)'] }
+
 [features]
 default = []
 pcsc = ["dep:pcsc"]

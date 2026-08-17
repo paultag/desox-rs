@@ -18,31 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-mod file_io;
-#[cfg(not(desox_replay_rw))]
-mod replay;
-#[cfg(desox_replay_rw)]
-mod replay_rw;
+macro_rules! replay {
+    ($name:ident, $path:literal, |$card:ident| $body:tt) => {
+        #[tokio::test]
+        async fn $name() {
+            const REPLAY: &str = include_str!($path);
 
-fn parse_replay(lines: &'static str) -> Vec<(Vec<u8>, Vec<u8>)> {
-    lines
-        .lines()
-        .map(|v| {
-            let [tx, rx] = v
-                .splitn(2, ' ')
-                .map(|v| hex::decode(v).unwrap())
-                .collect::<Vec<_>>()
-                .try_into()
-                .unwrap();
-            (tx, rx)
-        })
-        .collect()
+            let transcript = $crate::replay::parse_replay(REPLAY);
+            let transcript = transcript
+                .iter()
+                .map(|(tx, rx)| (tx.as_slice(), rx.as_slice()))
+                .collect::<Vec<_>>();
+
+            let backend = $crate::io::MockBackend::new(&transcript);
+
+            let $card = $crate::Card::new(&backend);
+            $body
+        }
+    };
 }
-
-#[cfg(not(desox_replay_rw))]
-pub(crate) use replay::replay;
-
-#[cfg(desox_replay_rw)]
-pub(crate) use replay_rw::replay;
+pub(crate) use replay;
 
 // vim: foldmethod=marker
