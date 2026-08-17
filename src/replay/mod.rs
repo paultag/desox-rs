@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
+mod application;
 mod file_io;
 #[cfg(not(desox_replay_rw))]
 mod replay;
