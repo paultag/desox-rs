@@ -177,68 +177,28 @@ where
             mut authentication,
         } = self;
 
+        let data: &[&[u8]] = match &new_key {
+            Key::Aes(key) => &[key, &[new_key_version]],
+            Key::Des(key) => &[key, key],
+        };
+        let crc = crc32(&header, data).to_le_bytes();
+        let data: &[&[u8]] = match &new_key {
+            Key::Aes(key) => &[key, &[new_key_version], &crc],
+            Key::Des(key) => &[key, key, &crc],
+        };
+
         // We can't use command_encrypted_request here because the response
         // isn't CMAC; it's plain (since the operation itself is what will
         // tear down the session). As a result, we have to explicitly call
         // encrypted_out__in so we don't try to validate cmac, we are
         // dropping the session anyway at function return.
 
-        let (status_code, response) = match (&mut authentication.session, new_key) {
-            (Session::Aes { keying, .. }, Key::Aes(key)) => {
-                // Changing AES key to a new AES key
-                //
-                // [CHPW] [KEY ID] [   KEY   ] [ VER ] [ CRC ]
-                //
-                let crc = crc32(&header, &[&key, &[new_key_version]]).to_le_bytes();
-                io::encrypted_out_plain_in(
-                    &card,
-                    keying,
-                    &mut self.buf,
-                    &header,
-                    &[&key, &[new_key_version], &crc],
-                )
-                .await?
+        let (status_code, response) = match &mut authentication.session {
+            Session::Aes { keying, .. } => {
+                io::encrypted_out_plain_in(&card, keying, &mut self.buf, &header, data).await?
             }
-            (Session::Aes { keying, .. }, Key::Des(key)) => {
-                // Changing AES key to a new DES key (WTF). Here we need to
-                // pad the key out to 16 bytes, and the version/crc is assumed
-                // to start there.
-                //
-                // [CHPW] [KEY ID] [ KEY ] [ PAD TO 16 ] [ CRC ]
-                //
-                let crc = crc32(&header, &[&key, &[0; 8]]).to_le_bytes();
-                io::encrypted_out_plain_in(
-                    &card,
-                    keying,
-                    &mut self.buf,
-                    &header,
-                    &[&key, &[0; 8], &crc],
-                )
-                .await?
-            }
-            (Session::Des { keying, .. }, Key::Aes(key)) => {
-                // Changing DES key to a new AES key (nice)
-                //
-                // [CHPW] [KEY ID] [   KEY   ] [ VER ] [ CRC ]
-                //
-                let crc = crc32(&header, &[&key, &[new_key_version]]).to_le_bytes();
-                io::encrypted_out_plain_in(
-                    &card,
-                    keying,
-                    &mut self.buf,
-                    &header,
-                    &[&key, &[new_key_version], &crc],
-                )
-                .await?
-            }
-            (Session::Des { keying, .. }, Key::Des(key)) => {
-                // Changing DES key to a new DES key (fine whatever)
-                //
-                // [CHPW] [KEY ID] [   KEY   ] [ CRC ]
-                //
-                let crc = crc32(&header, &[&key]).to_le_bytes();
-                io::encrypted_out_plain_in(&card, keying, &mut self.buf, &header, &[&key, &crc])
-                    .await?
+            Session::Des { keying, .. } => {
+                io::encrypted_out_plain_in(&card, keying, &mut self.buf, &header, data).await?
             }
         };
 

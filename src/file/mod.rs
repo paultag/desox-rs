@@ -70,6 +70,14 @@ impl FileSettings {
             Self::Backup { communication, .. } => *communication,
         }
     }
+
+    /// Return the [FilePermissions] for a file
+    pub fn permissions(&self) -> FilePermissions {
+        match self {
+            Self::Data { permissions, .. } => *permissions,
+            Self::Backup { permissions, .. } => *permissions,
+        }
+    }
 }
 
 // vim: foldmethod=marker

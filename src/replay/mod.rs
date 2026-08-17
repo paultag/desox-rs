@@ -20,11 +20,13 @@
 
 mod application;
 mod file_io;
+mod key_change;
 #[cfg(not(desox_replay_rw))]
 mod replay;
 #[cfg(desox_replay_rw)]
 mod replay_rw;
 
+#[cfg(not(desox_replay_rw))]
 fn parse_replay(lines: &'static str) -> Vec<(Vec<u8>, Vec<u8>)> {
     lines
         .lines()
