@@ -71,11 +71,23 @@ where
         output: &'a mut [u8],
         input: &[u8],
     ) -> Result<(StatusCode, &'a [u8]), Self::Error> {
+        #[cfg(feature = "tracing")]
+        tracing::trace!(direction = "request", "{:02x?}", input);
+
         let n = self.exchange_raw(output, input).await?;
         assert!(n > 0);
-        let status_code = output[0];
+        let status_code: StatusCode = output[0].into();
         let data = &output[1..n];
-        Ok((status_code.into(), data))
+
+        #[cfg(feature = "tracing")]
+        tracing::trace!(
+            direction = "request",
+            status_code = format!("{:?}", status_code),
+            "{:02x?}",
+            data
+        );
+
+        Ok((status_code, data))
     }
 }
 

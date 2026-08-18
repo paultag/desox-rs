@@ -38,6 +38,13 @@ pub fn check_crc32<'a, IoBackendErrorT>(
 
     let gen_crc32 = crc32(message, trailers);
 
+    #[cfg(feature = "tracing")]
+    tracing::trace!(
+        provided_crc = read_crc32,
+        computed_crc = gen_crc32,
+        "checking crc-32",
+    );
+
     if read_crc32 != gen_crc32 {
         return Err(Error::InvalidCrc32);
     }

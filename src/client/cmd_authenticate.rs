@@ -218,6 +218,12 @@ where
             }
         };
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "change_current_key",
+            status_code = format!("{:?}", status_code)
+        );
+
         if !response.is_empty() {
             return Err(Error::BadSize);
         };
@@ -299,6 +305,12 @@ where
                 return Err(Error::BadAlgorithm);
             }
         };
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "change_key",
+            status_code = format!("{:?}", status_code)
+        );
 
         if !response.is_empty() {
             return Err(Error::BadSize);

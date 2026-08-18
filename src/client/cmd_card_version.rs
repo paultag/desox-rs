@@ -37,6 +37,12 @@ where
             .default_exchange(&mut out, &[Instruction::GetVersionInfo as u8])
             .await?;
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "get_version_info",
+            status_code = format!("{:?}", status_code)
+        );
+
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }

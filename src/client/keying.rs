@@ -49,6 +49,13 @@ where
 
     /// Compute the CMAC for the provided input data (and optional trailer).
     pub fn generate_cmac(&mut self, header: &[u8], data: &[&[u8]]) -> [u8; KEY_SIZE] {
+        #[cfg(feature = "tracing")]
+        tracing::trace!(
+            header = format!("{:02x?}", header),
+            data = format!("{:02x?}", data),
+            "computing cmac"
+        );
+
         let mut working_block = [0u8; KEY_SIZE];
 
         let (mut data, data_len) = {
@@ -84,6 +91,9 @@ where
 
         self.set_iv(working_block);
 
+        #[cfg(feature = "tracing")]
+        tracing::trace!(cmac = format!("{:02x?}", working_block), "computed");
+
         working_block
     }
 
@@ -102,6 +112,13 @@ where
         }
         let (data, read_cmac) = data.split_at(data.len() - 8);
         let computed_cmac = self.generate_cmac_short(data, &[trailer.unwrap_or(&[])]);
+
+        #[cfg(feature = "tracing")]
+        tracing::trace!(
+            provided_cmac = format!("{:02x?}", read_cmac),
+            computed_cmac = format!("{:02x?}", computed_cmac),
+            "checking cmac",
+        );
 
         if read_cmac != computed_cmac {
             return Err(Error::InvalidSignature);

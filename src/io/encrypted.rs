@@ -45,11 +45,28 @@ where
     // we need to generate the CMAC for the input to ratchet internal
     // state forward.
 
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "request",
+        method = "plain",
+        "{:02x?} {:02x?}",
+        header,
+        data
+    );
+
     ks.generate_cmac(header, data);
 
     let (status_code, data) = plain_multi(backend, output, header, data).await?;
     let n = data.len();
     let data = &mut output[..n];
+
+    #[cfg(feature = "tracing")]
+    tracing::trace!(
+        direction = "response",
+        method = "encrypted(ciphertext)",
+        "{:02x?}",
+        data,
+    );
 
     if !data.len().is_multiple_of(KEY_SIZE) {
         return Err(Error::BadSize);
@@ -59,6 +76,15 @@ where
 
     let mut decryptor = ks.decryptor();
     decryptor.decrypt(data);
+
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "response",
+        method = "encrypted(plaintext)",
+        status_code = format!("{:?}", status_code),
+        "{:02x?}",
+        data,
+    );
 
     ks.set_iv(iv);
 
@@ -81,6 +107,15 @@ where
     BackendT::Error: Debug,
     Scheme<KEY_SIZE, AlgorithmT>: CryptoBackend<KEY_SIZE>,
 {
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "request",
+        method = "encrypted(plaintext)",
+        "{:02x?} {:02x?}",
+        header,
+        data
+    );
+
     let (mut data, data_len) = {
         let data_len = data.iter().fold(0, |n, data| n + data.len());
         (data.iter().flat_map(|v| v.iter()), data_len)
@@ -167,6 +202,14 @@ where
                 continue;
             }
             _ => {
+                #[cfg(feature = "tracing")]
+                tracing::trace!(
+                    direction = "response",
+                    method = "plain",
+                    status_code = format!("{:?}", status_code),
+                    "{:02x?}",
+                    &output[..n],
+                );
                 ks.set_iv(iv);
                 return Ok((status_code, &output[..n]));
             }

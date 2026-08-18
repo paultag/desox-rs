@@ -39,6 +39,12 @@ where
             .default_exchange(out, &[Instruction::GetApplicationIdList as u8])
             .await?;
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "list_applications",
+            status_code = format!("{:?}", status_code)
+        );
+
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }
@@ -69,6 +75,12 @@ where
             application_id: ApplicationId = application_id
         }, 4, []);
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "select_application",
+            status_code = format!("{:?}", status_code)
+        );
+
         if !response.is_empty() {
             return Err(Error::BadSize);
         };
@@ -95,6 +107,12 @@ where
             key_number: u8 = key_number.as_u8()?
         }, 6, []);
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "create_application",
+            status_code = format!("{:?}", status_code)
+        );
+
         if !response.is_empty() {
             return Err(Error::BadSize);
         };
@@ -115,6 +133,12 @@ where
             instruction: Instruction = Instruction::DeleteApplication,
             application_id: ApplicationId = application_id
         }, 4, []);
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "delete_application",
+            status_code = format!("{:?}", status_code)
+        );
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -149,6 +173,12 @@ where
             instruction: Instruction = Instruction::SetConfiguration,
             configuration_key: u8 = 0x01
         }, 2, [&default_key, &[key_version]]);
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "change_default_application_key",
+            status_code = format!("{:?}", status_code)
+        );
 
         if !response.is_empty() {
             return Err(Error::BadSize);

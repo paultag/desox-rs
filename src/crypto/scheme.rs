@@ -36,21 +36,29 @@ macro_rules! impl_crypto_backend {
     ($key_size:literal, $crypto:path, $cmac_type:ident($r_b:literal)) => {
         impl BackendEncryptor<$key_size> for cbc::Encryptor<$crypto> {
             fn encrypt(&mut self, data: &mut [u8]) {
+                #[cfg(feature = "tracing")]
+                tracing::trace!(data = format!("{:02x?}", data), "encrypting");
                 let (data_chunks, data_leftover) = data.as_chunks_mut::<$key_size>();
                 assert!(data_leftover.is_empty()); // ensure block alignment
                 for data in data_chunks {
                     self.encrypt_block(data.into());
                 }
+                #[cfg(feature = "tracing")]
+                tracing::trace!(data = format!("{:02x?}", data), "encrypted");
             }
         }
 
         impl BackendDecryptor<$key_size> for cbc::Decryptor<$crypto> {
             fn decrypt(&mut self, data: &mut [u8]) {
+                #[cfg(feature = "tracing")]
+                tracing::trace!(data = format!("{:02x?}", data), "decrypting");
                 let (data_chunks, data_leftover) = data.as_chunks_mut::<$key_size>();
                 assert!(data_leftover.is_empty()); // ensure block alignment
                 for data in data_chunks {
                     self.decrypt_block(data.into());
                 }
+                #[cfg(feature = "tracing")]
+                tracing::trace!(data = format!("{:02x?}", data), "decrypted");
             }
         }
 
@@ -75,14 +83,28 @@ macro_rules! impl_crypto_backend {
             }
 
             fn set_iv(&mut self, iv: [u8; $key_size]) {
+                #[cfg(feature = "tracing")]
+                tracing::trace!(iv = format!("{:02x?}", iv), "iv updated",);
                 self.iv = iv
             }
 
             fn decryptor(&self) -> cbc::Decryptor<$crypto> {
+                #[cfg(feature = "tracing")]
+                tracing::trace!(
+                    key = format!("{:02x?}", self.key),
+                    iv = format!("{:02x?}", self.iv),
+                    "new decryptor"
+                );
                 cbc::Decryptor::<$crypto>::new((&self.key).into(), (&self.iv).into())
             }
 
             fn encryptor(&self) -> cbc::Encryptor<$crypto> {
+                #[cfg(feature = "tracing")]
+                tracing::trace!(
+                    key = format!("{:02x?}", self.key),
+                    iv = format!("{:02x?}", self.iv),
+                    "new encryptor",
+                );
                 cbc::Encryptor::<$crypto>::new((&self.key).into(), (&self.iv).into())
             }
 
@@ -100,6 +122,13 @@ macro_rules! impl_crypto_backend {
 
                 let mut k2 = k1;
                 shift_xor(&mut k2);
+
+                #[cfg(feature = "tracing")]
+                tracing::trace!(
+                    k1 = format!("{:02x?}", k1),
+                    k2 = format!("{:02x?}", k2),
+                    "cmac keys generated",
+                );
 
                 (k1, k2)
             }

@@ -13,6 +13,7 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(desox_replay_rw)'] }
 [features]
 default = []
 pcsc = ["dep:pcsc"]
+tracing = ["dep:tracing", "std"]
 std = []
 
 [dependencies]
@@ -24,7 +25,7 @@ getrandom = { version = "0.4" }
 pcsc = { version = "2.9", optional = true }
 thiserror = "2.0"
 tokio = { version = "1.20", features = ["io-util", "fs", "sync"] }
-tracing = "0.1"
+tracing = { version = "0.1", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.20", features = ["full"] }

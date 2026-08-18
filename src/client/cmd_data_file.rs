@@ -82,6 +82,12 @@ where
             }
         };
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "read_file_at",
+            status_code = format!("{:?}", status_code)
+        );
+
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }
@@ -109,6 +115,12 @@ where
                 return Err(Error::BadFileCommunication);
             }
         };
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "write_file_at",
+            status_code = format!("{:?}", status_code)
+        );
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -153,6 +165,12 @@ where
                 }, 8, [])
             }
         };
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "read_file_at",
+            status_code = format!("{:?}", status_code)
+        );
 
         let n = response.len().min(length as usize);
         if n < (length as usize) {
@@ -204,6 +222,12 @@ where
             }
         };
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "write_file_at",
+            status_code = format!("{:?}", status_code)
+        );
+
         if !response.is_empty() {
             return Err(Error::BadSize);
         };
@@ -231,6 +255,12 @@ where
             instruction: Instruction = Instruction::ListFiles
         }, 1, []);
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "list_files",
+            status_code = format!("{:?}", status_code)
+        );
+
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }
@@ -246,6 +276,12 @@ where
             instruction: Instruction = Instruction::GetFileSettings,
             file_id: u8 = file_id
         }, 2, []);
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "get_file_settings",
+            status_code = format!("{:?}", status_code)
+        );
 
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
@@ -302,6 +338,12 @@ where
             size: [u8; 3] = U24::to_le_bytes(size)
         }, 8, []);
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "create_file",
+            status_code = format!("{:?}", status_code)
+        );
+
         if !response.is_empty() {
             return Err(Error::BadSize);
         };
@@ -319,6 +361,12 @@ where
             instruction: Instruction = Instruction::DeleteFile,
             file_id: FileId = file_id
         }, 2, []);
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "delete_file",
+            status_code = format!("{:?}", status_code)
+        );
 
         if !response.is_empty() {
             return Err(Error::BadSize);
@@ -339,6 +387,12 @@ where
         else {
             return Err(Error::BadSize);
         };
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "get_free_memory",
+            status_code = format!("{:?}", status_code)
+        );
 
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));

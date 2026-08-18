@@ -33,15 +33,32 @@ where
     BackendT::Error: Debug,
     crypto::Scheme<KEY_SIZE, AlgorithmT>: crypto::Backend<KEY_SIZE>,
 {
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "request",
+        method = "plain",
+        "{:02x?} {:02x?}",
+        header,
+        data
+    );
+
     ks.generate_cmac(header, data);
 
     let (status_code, data) = io::plain_multi(backend, output, header, data).await?;
-
     if status_code != StatusCode::Ack {
         return Ok((status_code, &[]));
     }
 
     let data = ks.validate_cmac(data, Some(&[status_code.into()]))?;
+
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "response",
+        method = "cmac",
+        status_code = format!("{:?}", status_code),
+        "{:02x?}",
+        data,
+    );
 
     Ok((status_code, data))
 }
@@ -63,6 +80,15 @@ where
     let mut data = data.to_vec();
     data.push(&cmac);
 
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "request",
+        method = "cmac",
+        "{:02x?} {:02x?}",
+        header,
+        data
+    );
+
     let (status_code, data) = io::plain_multi(backend, output, header, &data).await?;
 
     if status_code != StatusCode::Ack {
@@ -70,6 +96,15 @@ where
     }
 
     let data = ks.validate_cmac(data, Some(&[status_code.into()]))?;
+
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "response",
+        method = "cmac",
+        status_code = format!("{:?}", status_code),
+        "{:02x?}",
+        data,
+    );
 
     Ok((status_code, data))
 }

@@ -38,7 +38,21 @@ where
     BackendT: Backend,
     BackendT::Error: crate::std::fmt::Debug,
 {
-    plain_multi(backend, output, input, &[]).await
+    #[cfg(feature = "tracing")]
+    tracing::debug!(direction = "request", method = "plain", "{:02x?}", input);
+
+    let (status_code, response) = plain_multi(backend, output, input, &[]).await?;
+
+    #[cfg(feature = "tracing")]
+    tracing::debug!(
+        direction = "response",
+        method = "plain",
+        status_code = format!("{:?}", status_code),
+        "{:02x?}",
+        response
+    );
+
+    Ok((status_code, response))
 }
 
 /// Exchange a plain message with the underlying backend. This is how we

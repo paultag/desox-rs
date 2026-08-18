@@ -34,6 +34,13 @@ where
         let (status_code, response) = command_encrypted_response_de_minimis!(self, {
             instruction: Instruction = Instruction::GetUid
         }, 1, []);
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "get_uid",
+            status_code = format!("{:?}", status_code)
+        );
+
         let response = &response[..7 + 4];
         let response = io::check_crc32(response, &[&[status_code.into()]])?;
         if status_code != StatusCode::Ack {

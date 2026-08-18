@@ -43,6 +43,12 @@ where
             return Err(Error::BadSize);
         };
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "get_key_settings",
+            status_code = format!("{:?}", status_code)
+        );
+
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }
@@ -61,6 +67,12 @@ where
         else {
             return Err(Error::BadSize);
         };
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "get_key_version",
+            status_code = format!("{:?}", status_code)
+        );
 
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
