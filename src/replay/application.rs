@@ -22,6 +22,8 @@ use super::replay;
 use crate::{AppPermissions, Key, KeyCount, KeyPermissions, Permissions};
 
 replay!(application, "application.replay", |card| {
+    let mut out = [0; 0xffff];
+
     let mut card = card
         .authenticate_with_rnd_a(
             0x00,
@@ -47,6 +49,29 @@ replay!(application, "application.replay", |card| {
         .unwrap();
 
     let card = card.select_application([1, 2, 3]).await.unwrap();
+    let mut card = card
+        .authenticate_with_rnd_a(0x00, Key::Aes([0; 16]), Key::Aes([1; 16]))
+        .await
+        .unwrap();
+
+    let (permissions, key_count) = card.get_key_settings().await.unwrap();
+
+    assert_eq!(
+        Permissions {
+            app: AppPermissions {
+                can_change_key_settings: true,
+                can_change_picc_key: true,
+                anyone_can_delete: false,
+                anyone_can_list: false
+            },
+            key: KeyPermissions::RequiresPicc
+        },
+        permissions
+    );
+    assert_eq!(KeyCount::Aes(1), key_count);
+    assert_eq!(0, card.get_key_version(0x00).await.unwrap());
+    assert_eq!(0, card.list_files(&mut out).await.unwrap().len());
+
     let card = card.select_application([0, 0, 0]).await.unwrap();
     let mut card = card
         .authenticate_with_rnd_a(
