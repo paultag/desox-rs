@@ -47,7 +47,7 @@ pub use session::Session;
 
 use card::{
     command, command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
-    command_encrypted_response, command_header,
+    command_encrypted_response, command_encrypted_response_de_minimis, command_header,
 };
 use card_default::CardIoDefault;
 pub(crate) use handshake::AuthenticateExt;

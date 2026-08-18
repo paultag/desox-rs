@@ -98,6 +98,24 @@ macro_rules! command_encrypted_response {
 }
 pub(super) use command_encrypted_response;
 
+macro_rules! command_encrypted_response_de_minimis {
+    ($slf:expr, { $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, $size:literal, [ $( $body:expr ),* ]) => {{
+        let header: [u8; $size] = $crate::client::command_header!({
+            $( $field_name: $field_type = $field_value ),*
+        }, $size);
+
+        match &mut $slf.authentication.session {
+            $crate::client::Session::Aes { keying, .. } => {
+                $crate::io::plain_out_encrypted_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
+            },
+            $crate::client::Session::Des { keying, .. } => {
+                $crate::io::plain_out_encrypted_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
+            },
+        }
+    }};
+}
+pub(super) use command_encrypted_response_de_minimis;
+
 macro_rules! command_header {
     ({ $( $field_name:ident: $field_type:ty = $field_value:expr ),* }, $size:literal) => {{
         #[repr(C, packed)]

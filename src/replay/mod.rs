@@ -21,6 +21,7 @@
 mod application;
 mod file_io;
 mod key_change;
+mod metadata;
 #[cfg(not(desox_replay_rw))]
 mod replay;
 #[cfg(desox_replay_rw)]
