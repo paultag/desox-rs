@@ -49,6 +49,24 @@ macro_rules! status_codes {
                 }
             }
         }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+
+            $(
+
+            #[allow(nonstandard_style)]
+            #[test]
+            fn $name() {
+                let sc: StatusCode = $code.into();
+                assert_eq!(StatusCode::$name, sc);
+                let sc: u8 = StatusCode::$name.into();
+                assert_eq!($code, sc);
+            }
+
+            )*
+        }
     };
 }
 
