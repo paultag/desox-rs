@@ -37,9 +37,8 @@ where
     tracing::debug!(
         direction = "request",
         method = "plain",
-        "{:02x?} {:02x?}",
-        header,
-        data
+        header = hex::encode(header),
+        data = data.iter().map(hex::encode).collect::<String>(),
     );
 
     ks.generate_cmac(header, data);
@@ -56,8 +55,7 @@ where
         direction = "response",
         method = "cmac",
         status_code = format!("{:?}", status_code),
-        "{:02x?}",
-        data,
+        data = hex::encode(data),
     );
 
     Ok((status_code, data))
@@ -84,9 +82,8 @@ where
     tracing::debug!(
         direction = "request",
         method = "cmac",
-        "{:02x?} {:02x?}",
-        header,
-        data
+        header = hex::encode(header),
+        data = data.iter().map(hex::encode).collect::<String>(),
     );
 
     let (status_code, data) = io::plain_multi(backend, output, header, &data).await?;
@@ -102,8 +99,7 @@ where
         direction = "response",
         method = "cmac",
         status_code = format!("{:?}", status_code),
-        "{:02x?}",
-        data,
+        data = hex::encode(data),
     );
 
     Ok((status_code, data))

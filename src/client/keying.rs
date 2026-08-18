@@ -51,8 +51,8 @@ where
     pub fn generate_cmac(&mut self, header: &[u8], data: &[&[u8]]) -> [u8; KEY_SIZE] {
         #[cfg(feature = "tracing")]
         tracing::trace!(
-            header = format!("{:02x?}", header),
-            data = format!("{:02x?}", data),
+            header = hex::encode(header),
+            data = data.iter().map(hex::encode).collect::<String>(),
             "computing cmac"
         );
 
@@ -92,7 +92,7 @@ where
         self.set_iv(working_block);
 
         #[cfg(feature = "tracing")]
-        tracing::trace!(cmac = format!("{:02x?}", working_block), "computed");
+        tracing::trace!(cmac = hex::encode(working_block), "computed");
 
         working_block
     }
@@ -115,8 +115,8 @@ where
 
         #[cfg(feature = "tracing")]
         tracing::trace!(
-            provided_cmac = format!("{:02x?}", read_cmac),
-            computed_cmac = format!("{:02x?}", computed_cmac),
+            provided_cmac = hex::encode(read_cmac),
+            computed_cmac = hex::encode(computed_cmac),
             "checking cmac",
         );
 

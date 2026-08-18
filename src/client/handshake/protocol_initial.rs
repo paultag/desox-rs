@@ -118,8 +118,8 @@ where
 
         #[cfg(feature = "tracing")]
         tracing::trace!(
-            rnd_a = format!("{:02x?}", rnd_a),
-            rnd_b = format!("{:02x?}", rnd_b),
+            rnd_a = hex::encode(rnd_a),
+            rnd_b = hex::encode(rnd_b),
             "RndB challange, half-open"
         );
 

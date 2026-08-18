@@ -72,7 +72,7 @@ where
         input: &[u8],
     ) -> Result<(StatusCode, &'a [u8]), Self::Error> {
         #[cfg(feature = "tracing")]
-        tracing::trace!(direction = "request", "{:02x?}", input);
+        tracing::trace!(direction = "request", data = hex::encode(input));
 
         let n = self.exchange_raw(output, input).await?;
         assert!(n > 0);
@@ -81,10 +81,9 @@ where
 
         #[cfg(feature = "tracing")]
         tracing::trace!(
-            direction = "request",
+            direction = "response",
             status_code = format!("{:?}", status_code),
-            "{:02x?}",
-            data
+            data = hex::encode(data),
         );
 
         Ok((status_code, data))

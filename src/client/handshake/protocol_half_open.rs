@@ -78,7 +78,7 @@ where
 
         #[cfg(feature = "tracing")]
         tracing::debug!(
-            session_key = format!("{:02x?}", session_key),
+            session_key = hex::encode(session_key),
             "authentication successful",
         );
 

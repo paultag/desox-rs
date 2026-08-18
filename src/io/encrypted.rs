@@ -49,9 +49,8 @@ where
     tracing::debug!(
         direction = "request",
         method = "plain",
-        "{:02x?} {:02x?}",
-        header,
-        data
+        header = hex::encode(header),
+        data = data.iter().map(hex::encode).collect::<String>(),
     );
 
     ks.generate_cmac(header, data);
@@ -64,8 +63,7 @@ where
     tracing::trace!(
         direction = "response",
         method = "encrypted(ciphertext)",
-        "{:02x?}",
-        data,
+        data = hex::encode(&data),
     );
 
     if !data.len().is_multiple_of(KEY_SIZE) {
@@ -82,8 +80,7 @@ where
         direction = "response",
         method = "encrypted(plaintext)",
         status_code = format!("{:?}", status_code),
-        "{:02x?}",
-        data,
+        data = hex::encode(&data),
     );
 
     ks.set_iv(iv);
@@ -111,9 +108,8 @@ where
     tracing::debug!(
         direction = "request",
         method = "encrypted(plaintext)",
-        "{:02x?} {:02x?}",
-        header,
-        data
+        header = hex::encode(header),
+        data = data.iter().map(hex::encode).collect::<String>(),
     );
 
     let (mut data, data_len) = {
@@ -207,8 +203,7 @@ where
                     direction = "response",
                     method = "plain",
                     status_code = format!("{:?}", status_code),
-                    "{:02x?}",
-                    &output[..n],
+                    data = hex::encode(&output[..n]),
                 );
                 ks.set_iv(iv);
                 return Ok((status_code, &output[..n]));
