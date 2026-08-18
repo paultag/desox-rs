@@ -155,7 +155,7 @@ replay!(
             .unwrap();
 
         // AES 1 -> DES default
-        let card = card
+        let _card = card
             .authenticate_with_rnd_a(0x00, Key::Aes([1; 16]), Key::Aes([4; 16]))
             .await
             .unwrap()

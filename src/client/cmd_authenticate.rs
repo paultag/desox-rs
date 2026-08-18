@@ -152,7 +152,14 @@ where
     ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
         let mut key_id = self.authentication.session.get_key_id();
 
-        if self.application_id == [0; 3] {
+        let Self {
+            card,
+            buf,
+            application_id,
+            mut authentication,
+        } = self;
+
+        if application_id == [0; 3] {
             // If we're in the default '00 00 00' application, we need to
             // change the key id's high bits to indicate the key type. when
             // making an application, we can provide the [crate::KeyCount]
@@ -163,19 +170,28 @@ where
                 Key::Aes(_) => 0x80,
                 Key::Des(_) => 0x00,
             };
+        } else {
+            // Otherwise, we're in an actual application -- something where
+            // we set the key algorithm when we created the application itself.
+            //
+            // As such, unlike the PICC default application (0x000000), we
+            // can't set the high bits of the key_id to indicate an algorithm
+            // change. This means that we need to check (and error) if the
+            // session and algorithm do not match when we're in a non-default
+            // application.
+            match (&authentication.session, new_key) {
+                (Session::Aes { .. }, Key::Aes(_)) => {}
+                (Session::Des { .. }, Key::Des(_)) => {}
+                _ => {
+                    return Err(Error::BadAlgorithm);
+                }
+            }
         }
 
         let header: [u8; 2] = command_header!({
             instruction: Instruction = Instruction::ChangeKey,
             key_id: KeyId = key_id
         }, 2);
-
-        let Self {
-            card,
-            buf,
-            application_id,
-            mut authentication,
-        } = self;
 
         let data: &[&[u8]] = match &new_key {
             Key::Aes(key) => &[key, &[new_key_version]],
