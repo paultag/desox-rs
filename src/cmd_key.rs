@@ -127,7 +127,7 @@ where
         tracing::debug!(
             method = "set_key_settings",
             permissions = format!("{:?}", permissions),
-            crc = crc,
+            crc = hex::encode(crc),
             status_code = format!("{:?}", status_code)
         );
 
