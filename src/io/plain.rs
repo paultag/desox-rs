@@ -39,7 +39,7 @@ where
     BackendT::Error: crate::std::fmt::Debug,
 {
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "request",
         method = "plain",
         data = hex::encode(input)
@@ -48,7 +48,7 @@ where
     let (status_code, response) = plain_multi(backend, output, input, &[]).await?;
 
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "response",
         method = "plain",
         status_code = format!("{:?}", status_code),

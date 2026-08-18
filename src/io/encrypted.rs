@@ -46,7 +46,7 @@ where
     // state forward.
 
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "request",
         method = "plain",
         header = hex::encode(header),
@@ -76,7 +76,7 @@ where
     decryptor.decrypt(data);
 
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "response",
         method = "encrypted(plaintext)",
         status_code = format!("{:?}", status_code),
@@ -105,7 +105,7 @@ where
     Scheme<KEY_SIZE, AlgorithmT>: CryptoBackend<KEY_SIZE>,
 {
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "request",
         method = "encrypted(plaintext)",
         header = hex::encode(header),

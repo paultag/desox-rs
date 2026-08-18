@@ -34,7 +34,7 @@ where
     crypto::Scheme<KEY_SIZE, AlgorithmT>: crypto::Backend<KEY_SIZE>,
 {
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "request",
         method = "plain",
         header = hex::encode(header),
@@ -51,7 +51,7 @@ where
     let data = ks.validate_cmac(data, Some(&[status_code.into()]))?;
 
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "response",
         method = "cmac",
         status_code = format!("{:?}", status_code),
@@ -79,7 +79,7 @@ where
     data.push(&cmac);
 
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "request",
         method = "cmac",
         header = hex::encode(header),
@@ -95,7 +95,7 @@ where
     let data = ks.validate_cmac(data, Some(&[status_code.into()]))?;
 
     #[cfg(feature = "tracing")]
-    tracing::debug!(
+    tracing::trace!(
         direction = "response",
         method = "cmac",
         status_code = format!("{:?}", status_code),
