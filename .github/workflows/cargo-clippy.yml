@@ -1,0 +1,39 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.rs"
+      - Cargo.toml
+      - Cargo.lock
+      - .github/workflows/cargo-clippy.yml
+  pull_request:
+    paths:
+      - "**.rs"
+      - Cargo.toml
+      - Cargo.lock
+      - .github/workflows/cargo-clippy.yml
+name: cargo clippy
+jobs:
+  cargoclippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flags: [
+          "",
+          "--all-features",
+          "--no-default-features --features ''",
+          "--no-default-features --features 'pcsc'",
+          "--no-default-features --features 'tracing'",
+          "--no-default-features --features 'std'",
+        ]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy
+      - name: Run clippy
+        run: cargo clippy ${{ matrix.flags }} --tests -- -D warnings
+      - name: Cargo check --release
+        run: cargo check --release

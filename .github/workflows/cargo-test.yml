@@ -1,0 +1,39 @@
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.rs"
+      - Cargo.toml
+      - Cargo.lock
+      - .github/workflows/cargo-test.yml
+  pull_request:
+    paths:
+      - "**.rs"
+      - Cargo.toml
+      - Cargo.lock
+      - .github/workflows/cargo-test.yml
+  workflow_dispatch:
+permissions: read-all
+name: cargo test
+jobs:
+  cargotest:
+    name: cargo test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flags: [
+          "",
+          "--all-features",
+          "--no-default-features --features ''",
+          "--no-default-features --features 'pcsc'",
+          "--no-default-features --features 'tracing'",
+          "--no-default-features --features 'std'",
+        ]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: cargo test
+        shell: bash
+        run: |
+          cargo test ${{ matrix.flags }}
