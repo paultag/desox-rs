@@ -23,7 +23,7 @@ mod file_io;
 mod key_change;
 mod metadata;
 #[cfg(not(desox_replay_rw))]
-mod replay;
+mod replay_ro;
 #[cfg(desox_replay_rw)]
 mod replay_rw;
 
@@ -44,7 +44,7 @@ fn parse_replay(lines: &'static str) -> Vec<(Vec<u8>, Vec<u8>)> {
 }
 
 #[cfg(not(desox_replay_rw))]
-pub(crate) use replay::replay;
+pub(crate) use replay_ro::replay;
 
 #[cfg(desox_replay_rw)]
 pub(crate) use replay_rw::replay;
