@@ -71,39 +71,38 @@ mod version_info;
 
 pub mod io;
 
-pub use card::{AuthenticationState, Card};
-pub use card_authenticated::Authenticated;
-pub use card_unauthenticated::Unauthenticated;
-pub use cmd_data_file::FileIo;
-pub use keying::KeyingState;
-pub use session::Session;
-
 use card::{
     command, command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
     command_encrypted_response, command_encrypted_response_de_minimis, command_header,
 };
 use card_default::CardIoDefault;
+use copy_to_slice::CopyToSlice;
+use crc::crc32;
+use padding::Padding;
+use u24::U24;
+
 pub(crate) use handshake::AuthenticateExt;
+
+pub use card::{AuthenticationState, Card};
+pub use card_authenticated::Authenticated;
+pub use card_unauthenticated::Unauthenticated;
+pub use cmd_data_file::FileIo;
+pub use error::Error;
+pub use file::{FileCommunication, FilePermissions, FileSettings, FileType};
+pub use instruction::Instruction;
+pub use key::Key;
+pub use key_count::KeyCount;
+pub use keying::KeyingState;
+pub use permissions::{AppPermissions, KeyPermissions, Permissions};
+pub use session::Session;
+pub use status_code::StatusCode;
+pub use version_info::{DetailedVersionInfo, VersionInfo};
 
 /// Type alias for a card which is currently unauthenticated.
 pub type UnauthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Unauthenticated>;
 
 /// Type alias for a card which is currently authenticated.
 pub type AuthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Authenticated>;
-
-pub use error::Error;
-pub use file::{FileCommunication, FilePermissions, FileSettings, FileType};
-pub use instruction::Instruction;
-pub use key::Key;
-pub use key_count::KeyCount;
-pub use permissions::{AppPermissions, KeyPermissions, Permissions};
-pub use status_code::StatusCode;
-pub use version_info::{DetailedVersionInfo, VersionInfo};
-
-use copy_to_slice::CopyToSlice;
-use crc::crc32;
-use padding::Padding;
-use u24::U24;
 
 /// MIFARE DESFire Cards all have a Unique ID ([Uid]). UIDs are 7 bytes long,
 /// and are generally only readable after authentication.
