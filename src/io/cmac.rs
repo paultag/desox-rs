@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-use crate::{Error, StatusCode, client::KeyingState, crypto, io, std::fmt::Debug};
+use crate::{Error, KeyingState, StatusCode, crypto, io, std::fmt::Debug};
 
 /// Exchange a CMAC signed message with the Card.
 pub async fn plain_out_cmac_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
@@ -109,8 +109,7 @@ where
 mod tests {
     use super::*;
     use crate::{
-        Instruction,
-        client::AuthenticateExt,
+        AuthenticateExt, Instruction,
         crypto::Backend as CryptoBackend,
         io::{mock_backend, plain},
     };

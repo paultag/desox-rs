@@ -19,14 +19,8 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    Error, Instruction, Key, KeyId, StatusCode, Unauthenticated,
-    client::{
-        AuthenticateExt, Authenticated, AuthenticationState, Card, KeyingState, Session,
-        command_header,
-    },
-    crc32,
-    crypto::xor,
-    io,
+    AuthenticateExt, Authenticated, AuthenticationState, Card, Error, Instruction, Key, KeyId,
+    KeyingState, Session, StatusCode, Unauthenticated, command_header, crc32, crypto::xor, io,
 };
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>

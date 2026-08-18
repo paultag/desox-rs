@@ -19,8 +19,7 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    CopyToSlice, Error, Instruction, StatusCode,
-    client::KeyingState,
+    CopyToSlice, Error, Instruction, KeyingState, StatusCode,
     crypto::{Backend as CryptoBackend, BackendDecryptor, BackendEncryptor, Scheme},
     io::{Backend as IoBackend, plain_multi},
     std::fmt::Debug,

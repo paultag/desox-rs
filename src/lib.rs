@@ -37,31 +37,60 @@
 
 extern crate alloc;
 
-mod client;
-pub mod io;
-
+mod card;
+mod card_authenticated;
+mod card_default;
+mod card_unauthenticated;
+mod cmd_applications;
+mod cmd_authenticate;
+mod cmd_card_version;
+mod cmd_data_file;
+mod cmd_format_card;
+mod cmd_key;
+mod cmd_real_uid;
 mod copy_to_slice;
 mod crc;
 mod crypto;
 mod error;
 mod file;
+mod handshake;
 mod instruction;
 mod key;
 mod key_count;
+mod keying;
 mod padding;
 #[cfg(feature = "pcsc")]
 mod pcsc;
 mod permissions;
 #[cfg(test)]
 mod replay;
+mod session;
 mod status_code;
 mod u24;
 mod version_info;
 
-pub use client::{
-    Authenticated, AuthenticatedCard, AuthenticationState, Card, FileIo, KeyingState, Session,
-    Unauthenticated, UnauthenticatedCard,
+pub mod io;
+
+pub use card::{AuthenticationState, Card};
+pub use card_authenticated::Authenticated;
+pub use card_unauthenticated::Unauthenticated;
+pub use cmd_data_file::FileIo;
+pub use keying::KeyingState;
+pub use session::Session;
+
+use card::{
+    command, command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
+    command_encrypted_response, command_encrypted_response_de_minimis, command_header,
 };
+use card_default::CardIoDefault;
+pub(crate) use handshake::AuthenticateExt;
+
+/// Type alias for a card which is currently unauthenticated.
+pub type UnauthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Unauthenticated>;
+
+/// Type alias for a card which is currently authenticated.
+pub type AuthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Authenticated>;
+
 pub use error::Error;
 pub use file::{FileCommunication, FilePermissions, FileSettings, FileType};
 pub use instruction::Instruction;

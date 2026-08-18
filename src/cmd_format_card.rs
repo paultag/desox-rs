@@ -18,36 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE. }}}
 
-use crate::{
-    Error, Instruction, StatusCode, Uid,
-    client::{Authenticated, Card, command_encrypted_response_de_minimis},
-    io,
-};
+use crate::{Authenticated, Card, CardIoDefault, Error, Instruction, StatusCode, io};
 
 impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {
-    /// Get the MiFare card's globally unique 7-byte UID. This can only
-    /// be done while authenticated -- and is sent back to us encrypted.
-    pub async fn get_uid(&mut self) -> Result<Uid, Error<IoBackendT::Error>> {
-        let (status_code, response) = command_encrypted_response_de_minimis!(self, {
-            instruction: Instruction = Instruction::GetUid
-        }, 1, []);
+    /// Format the card, resetting it back to the default state.
+    pub async fn format(&mut self) -> Result<(), Error<IoBackendT::Error>> {
+        let (status_code, &[]) = self
+            .default_exchange_de_minimis(&[Instruction::FormatCard as u8])
+            .await?
+        else {
+            return Err(Error::BadSize);
+        };
 
         #[cfg(feature = "tracing")]
         tracing::debug!(
-            method = "get_uid",
+            method = "format",
             status_code = format!("{:?}", status_code)
         );
 
-        let response = &response[..7 + 4];
-        let response = io::check_crc32(response, &[&[status_code.into()]])?;
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }
-        let uid: &Uid = response.try_into().map_err(|_| Error::BadSize)?;
-        Ok(*uid)
+
+        Ok(())
     }
 }
 

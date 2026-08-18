@@ -19,7 +19,7 @@
 // THE SOFTWARE. }}}
 
 use super::{AuthenticationState, Card, CardIoDefault, Unauthenticated};
-use crate::{Error, KeyId, StatusCode, client::Session, io};
+use crate::{Error, KeyId, Session, StatusCode, io};
 
 /// Authenticated Session
 pub struct Authenticated {

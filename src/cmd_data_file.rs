@@ -19,14 +19,10 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    Error, FileCommunication, FileId, FilePermissions, FileSettings, FileType, Instruction,
-    StatusCode, U24,
-    client::{
-        Authenticated, AuthenticationState, Card, CardIoDefault, Unauthenticated, command,
-        command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
-        command_encrypted_response,
-    },
-    io,
+    Authenticated, AuthenticationState, Card, CardIoDefault, Error, FileCommunication, FileId,
+    FilePermissions, FileSettings, FileType, Instruction, StatusCode, U24, Unauthenticated,
+    command, command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
+    command_encrypted_response, io,
 };
 
 /// Trait to handle file i/o (be it authenticated or not!) -- this is a trait

@@ -19,9 +19,8 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    Error, Instruction, KeyCount, KeyId, Permissions, StatusCode,
-    client::{AuthenticationState, Card, CardIoDefault},
-    io,
+    AuthenticationState, Card, CardIoDefault, Error, Instruction, KeyCount, KeyId, Permissions,
+    StatusCode, io,
 };
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
