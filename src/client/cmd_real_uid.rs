@@ -20,7 +20,7 @@
 
 use crate::{
     Error, Instruction, StatusCode, Uid,
-    client::{Authenticated, Card, Session},
+    client::{Authenticated, Card, command_encrypted_request_de_minimis},
     io,
 };
 
@@ -31,32 +31,11 @@ where
     /// Get the MiFare card's globally unique 7-byte UID. This can only
     /// be done while authenticated -- and is sent back to us encrypted.
     pub async fn get_uid(&mut self) -> Result<Uid, Error<IoBackendT::Error>> {
-        let (status_code, response) = match &mut self.authentication.session {
-            Session::Des { keying, .. } => {
-                io::plain_out_encrypted_in(
-                    &self.card,
-                    keying,
-                    &mut self.buf,
-                    &[Instruction::GetUid as u8],
-                    &[],
-                )
-                .await?
-            }
-            Session::Aes { keying, .. } => {
-                io::plain_out_encrypted_in(
-                    &self.card,
-                    keying,
-                    &mut self.buf,
-                    &[Instruction::GetUid as u8],
-                    &[],
-                )
-                .await?
-            }
-        };
-
+        let (status_code, response) = command_encrypted_request_de_minimis!(self, {
+            instruction: Instruction = Instruction::GetUid
+        }, 1, []);
         let response = &response[..7 + 4];
         let response = io::check_crc32(response, &[&[status_code.into()]])?;
-
         if status_code != StatusCode::Ack {
             return Err(Error::BadStatusCode(status_code));
         }

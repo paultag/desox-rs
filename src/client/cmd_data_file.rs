@@ -97,7 +97,7 @@ where
         data: &[u8],
     ) -> Result<(), Error<IoBackendT::Error>> {
         let (status_code, response) = match communication {
-            FileCommunication::Plain | FileCommunication::Cmac => {
+            FileCommunication::Plain => {
                 command_de_minimis!(self, {
             instruction: Instruction = Instruction::WriteDataFile,
             file_id: u8 = file_id,
@@ -105,7 +105,7 @@ where
             size: [u8; 3] = U24::to_le_bytes(data.len() as u32)
         }, 8, [data])
             }
-            FileCommunication::Encrypted => {
+            FileCommunication::Cmac | FileCommunication::Encrypted => {
                 return Err(Error::BadFileCommunication);
             }
         };
@@ -346,6 +346,69 @@ where
 
         let size = U24::from_le_bytes([s1, s2, s3]);
         Ok(size)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Card, FileCommunication, FileIo, io::MockBackend};
+
+    #[tokio::test]
+    async fn test_free_memory() {
+        let mb = MockBackend::new(&[(&[0x6e], &[0x00, 0x00, 0x04, 0x00])]);
+        let mut card = Card::new(&mb);
+        assert_eq!(1024, card.get_free_memory().await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_free_memory_sc() {
+        let mb = MockBackend::new(&[(&[0x6e], &[0xae])]);
+        let mut card = Card::new(&mb);
+        assert!(card.get_free_memory().await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_free_memory_short() {
+        let mb = MockBackend::new(&[(&[0x6e], &[0x00])]);
+        let mut card = Card::new(&mb);
+        assert!(card.get_free_memory().await.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_unauth_encrypted_file_read() {
+        let mb = MockBackend::new(&[]);
+        let mut out = [0; 0xffff];
+        let mut card = Card::new(&mb);
+
+        assert!(
+            card.read_file_at(&mut out, 0x00, FileCommunication::Encrypted, 0, 1024)
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_unauth_encrypted_file_write() {
+        let mb = MockBackend::new(&[]);
+        let mut card = Card::new(&mb);
+
+        assert!(
+            card.write_file_at(0x00, FileCommunication::Encrypted, 0, b"hack the planet")
+                .await
+                .is_err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_unauth_cmac_file_write() {
+        let mb = MockBackend::new(&[]);
+        let mut card = Card::new(&mb);
+
+        assert!(
+            card.write_file_at(0x00, FileCommunication::Cmac, 0, b"hack the planet")
+                .await
+                .is_err()
+        );
     }
 }
 
