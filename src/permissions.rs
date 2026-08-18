@@ -38,39 +38,39 @@ impl Permissions {
     pub const FACTORY_DEFAULT: Self = Self {
         app: AppPermissions {
             can_change_key_settings: true,
-            can_change_picc_key: true,
+            can_change_root_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
-        key: KeyPermissions::RequiresPicc,
+        key: KeyPermissions::RequiresRoot,
     };
 }
 
-/// PICC-wide Key Settings. This represents what permissions are required
-/// to take card-wide destructive actions, such as creating or deleting
-/// applications, changing key permissions, or changing the PICC key.
+/// Application-wide Key Settings. This represents what permissions are
+/// required to take app-wide destructive actions, such as creating or deleting
+/// applications, changing key permissions, or changing the root key.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct AppPermissions {
     /// If true, the key settings (like, this very configuration!) can be
     /// changed. If false, these settings are locked in forever.
     pub can_change_key_settings: bool,
 
-    /// If true, the PICC key ("master key", or key 0x00 in the default
-    /// application (00 00 00)) can be changed. If false, the PICC key may
+    /// If true, the root key ("master key", or key 0x00 in the default
+    /// application (00 00 00)) can be changed. If false, the root key may
     /// not be changed.
-    pub can_change_picc_key: bool,
+    pub can_change_root_key: bool,
 
     /// If true, deleting applications does not require authentication
-    /// with the PICC key ("master key").
+    /// with the root key ("master key").
     pub anyone_can_delete: bool,
 
     /// If true, listing applications does not require authentication
-    /// with the PICC key ("master key").
+    /// with the root key ("master key").
     pub anyone_can_list: bool,
 }
 
 impl AppPermissions {
-    const CAN_CHANGE_PICC_KEY: u8 = 0x01;
+    const CAN_CHANGE_ROOT_KEY: u8 = 0x01;
     const ANYONE_CAN_LIST: u8 = 0x02;
     const ANYONE_CAN_DELETE: u8 = 0x04;
     const CAN_CHANGE_KEY_SETTINGS: u8 = 0x08;
@@ -79,7 +79,7 @@ impl AppPermissions {
     /// value.
     fn from_u8(ks: u8) -> Self {
         Self {
-            can_change_picc_key: (ks & Self::CAN_CHANGE_PICC_KEY) != 0,
+            can_change_root_key: (ks & Self::CAN_CHANGE_ROOT_KEY) != 0,
             anyone_can_list: (ks & Self::ANYONE_CAN_LIST) != 0,
             anyone_can_delete: (ks & Self::ANYONE_CAN_DELETE) != 0,
             can_change_key_settings: (ks & Self::CAN_CHANGE_KEY_SETTINGS) != 0,
@@ -88,8 +88,8 @@ impl AppPermissions {
 
     /// Create a new [Permissions] encoded value.
     pub fn as_u8(&self) -> u8 {
-        (if self.can_change_picc_key {
-            Self::CAN_CHANGE_PICC_KEY
+        (if self.can_change_root_key {
+            Self::CAN_CHANGE_ROOT_KEY
         } else {
             0
         }) | (if self.anyone_can_list {
@@ -113,8 +113,8 @@ impl AppPermissions {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum KeyPermissions {
     /// Changing an Application key requires authentication with
-    /// the PICC Key ("master key").
-    RequiresPicc,
+    /// the Root Key ("master key").
+    RequiresRoot,
 
     /// Changing an Application key requires authentication with the
     /// provided Application key (must be within the range of 1 to 13,
@@ -134,7 +134,7 @@ impl KeyPermissions {
     /// value.
     fn from_u8(ks: u8) -> Self {
         match ks >> 4 {
-            0x00 => Self::RequiresPicc,
+            0x00 => Self::RequiresRoot,
             0x0E => Self::RequiresTargetedAppKey,
             0x0F => Self::Frozen,
             ks => Self::RequiresAppKey(ks),
@@ -148,7 +148,7 @@ impl KeyPermissions {
     /// [Error::IoBackend], so this is purely for sizing/checking.
     fn as_u8<IoBackendErrorT>(&self) -> Result<u8, Error<IoBackendErrorT>> {
         Ok((match &self {
-            Self::RequiresPicc => 0x00,
+            Self::RequiresRoot => 0x00,
             Self::RequiresAppKey(key @ 0x01..=0x0D) => *key,
             Self::RequiresAppKey(_) => return Err(Error::BadKeyId),
             Self::RequiresTargetedAppKey => 0x0E,
@@ -207,17 +207,17 @@ mod tests {
     test_key_settings!(test_app_frozen { 0x00, Permissions {
         app: AppPermissions {
             can_change_key_settings: false,
-            can_change_picc_key: false,
+            can_change_root_key: false,
             anyone_can_delete: false,
             anyone_can_list: false,
         },
-        key: KeyPermissions::RequiresPicc,
+        key: KeyPermissions::RequiresRoot,
     } });
 
     test_key_settings!(test_app_a { 0xAF, Permissions {
         app: AppPermissions {
             can_change_key_settings: true,
-            can_change_picc_key: true,
+            can_change_root_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
@@ -236,7 +236,7 @@ mod tests {
     test_bad_key_settings!(test_bad_app_0 { Permissions {
         app: AppPermissions {
             can_change_key_settings: true,
-            can_change_picc_key: true,
+            can_change_root_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },
@@ -246,7 +246,7 @@ mod tests {
     test_bad_key_settings!(test_bad_app_e { Permissions {
         app: AppPermissions {
             can_change_key_settings: true,
-            can_change_picc_key: true,
+            can_change_root_key: true,
             anyone_can_delete: true,
             anyone_can_list: true,
         },

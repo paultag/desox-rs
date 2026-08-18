@@ -42,9 +42,9 @@ replay!(metadata, "metadata.replay", |card| {
                 anyone_can_delete: true,
                 anyone_can_list: true,
                 can_change_key_settings: true,
-                can_change_picc_key: true,
+                can_change_root_key: true,
             },
-            key: KeyPermissions::RequiresPicc,
+            key: KeyPermissions::RequiresRoot,
         },
         permissions,
     );

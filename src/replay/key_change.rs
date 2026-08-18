@@ -37,11 +37,11 @@ replay!(
         let key_settings = Permissions {
             app: AppPermissions {
                 can_change_key_settings: true,
-                can_change_picc_key: true,
+                can_change_root_key: true,
                 anyone_can_delete: false,
                 anyone_can_list: false,
             },
-            key: KeyPermissions::RequiresPicc,
+            key: KeyPermissions::RequiresRoot,
         };
         let key_count = KeyCount::Des(1);
 
@@ -88,11 +88,11 @@ replay!(
         let key_settings = Permissions {
             app: AppPermissions {
                 can_change_key_settings: true,
-                can_change_picc_key: true,
+                can_change_root_key: true,
                 anyone_can_delete: false,
                 anyone_can_list: false,
             },
-            key: KeyPermissions::RequiresPicc,
+            key: KeyPermissions::RequiresRoot,
         };
         let key_count = KeyCount::Aes(1);
 
