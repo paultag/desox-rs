@@ -22,7 +22,6 @@ use crate::{
     Error, Instruction, StatusCode, VersionInfo,
     client::{AuthenticationState, Card, CardIoDefault},
     io,
-    std::mem::transmute,
 };
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
@@ -42,11 +41,8 @@ where
             return Err(Error::BadStatusCode(status_code));
         }
 
-        if response.len() != 28 {
-            return Err(Error::BadSize);
-        }
-        let out: &[u8; 28] = response.try_into().unwrap();
-        Ok(*unsafe { transmute::<&[u8; 28], &VersionInfo>(out) })
+        let response: &[u8; 28] = response.try_into().map_err(|_| Error::BadSize)?;
+        Ok(VersionInfo::parse(response))
     }
 }
 

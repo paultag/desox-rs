@@ -21,7 +21,6 @@
 use crate::Uid;
 
 /// Unparsed version info struct
-#[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct VersionInfo {
     /// Hardware Version Information
@@ -45,8 +44,28 @@ pub struct VersionInfo {
     pub production_year: u8,
 }
 
+impl VersionInfo {
+    /// Parse [VersionInfo] from a fixed-sized array.
+    pub fn parse(v: &[u8; 28]) -> Self {
+        let hardware = DetailedVersionInfo::parse(v[..7].try_into().unwrap());
+        let software = DetailedVersionInfo::parse(v[7..14].try_into().unwrap());
+        let uid: Uid = v[14..21].try_into().unwrap();
+        let production_batch_number: [u8; 5] = v[21..26].try_into().unwrap();
+        let production_calendar_week = v[26];
+        let production_year = v[27];
+
+        Self {
+            hardware,
+            software,
+            uid,
+            production_batch_number,
+            production_calendar_week,
+            production_year,
+        }
+    }
+}
+
 /// Unparsed version info for Hardware/Software versions.
-#[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct DetailedVersionInfo {
     /// Vendor ID field. 0x04 for NXP.
@@ -71,6 +90,29 @@ pub struct DetailedVersionInfo {
     pub protocol_type: u8,
 }
 
-const _: [u8; 28] = [0; size_of::<VersionInfo>()];
+impl DetailedVersionInfo {
+    /// Parse [DetailedVersionInfo] from a fixed-sized array.
+    pub fn parse(v: &[u8; 7]) -> Self {
+        let [
+            vendor_id,
+            r#type,
+            sub_type,
+            major_version,
+            minor_version,
+            storage_size,
+            protocol_type,
+        ] = *v;
+
+        Self {
+            vendor_id,
+            r#type,
+            sub_type,
+            major_version,
+            minor_version,
+            storage_size,
+            protocol_type,
+        }
+    }
+}
 
 // vim: foldmethod=marker
