@@ -65,6 +65,15 @@ mod tests {
         Padding::pad(&mut v, 15);
         assert_eq!(*b"HELLO WORLD\x00\x00\x00\x00\x80", *v);
     }
+
+    #[should_panic]
+    #[test]
+    fn test_padding_overlong() {
+        let mut v: Array<u8, U16> = [0; 16].into();
+        v[..11].copy_from_slice(b"HELLO WORLD");
+        Padding::pad(&mut v, 30);
+        assert_eq!(*b"HELLO WORLD\x80\x00\x00\x00\x00", *v);
+    }
 }
 
 // vim: foldmethod=marker
