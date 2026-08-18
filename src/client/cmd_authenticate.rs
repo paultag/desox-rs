@@ -221,6 +221,9 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "change_current_key",
+            key_id = key_id,
+            new_key = format!("{:?}", new_key),
+            new_key_version = new_key_version,
             status_code = format!("{:?}", status_code)
         );
 

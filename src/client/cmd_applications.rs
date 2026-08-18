@@ -78,6 +78,7 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "select_application",
+            application_id = hex::encode(application_id),
             status_code = format!("{:?}", status_code)
         );
 
@@ -110,6 +111,9 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "create_application",
+            application_id = hex::encode(application_id),
+            key_settings = format!("{:?}", key_settings),
+            key_number = format!("{:?}", key_number),
             status_code = format!("{:?}", status_code)
         );
 
@@ -137,6 +141,7 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "delete_application",
+            application_id = hex::encode(application_id),
             status_code = format!("{:?}", status_code)
         );
 
@@ -177,6 +182,7 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "change_default_application_key",
+            default_key = hex::encode(default_key),
             status_code = format!("{:?}", status_code)
         );
 

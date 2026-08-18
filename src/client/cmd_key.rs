@@ -71,6 +71,7 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "get_key_version",
+            key_id = key_id,
             status_code = format!("{:?}", status_code)
         );
 

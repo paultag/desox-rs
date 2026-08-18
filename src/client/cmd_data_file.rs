@@ -85,6 +85,10 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "read_file_at",
+            file_id = file_id,
+            communication = format!("{:?}", communication),
+            offset = offset,
+            length = length,
             status_code = format!("{:?}", status_code)
         );
 
@@ -119,6 +123,10 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "write_file_at",
+            file_id = file_id,
+            communication = format!("{:?}", communication),
+            offset = offset,
+            data = hex::encode(data),
             status_code = format!("{:?}", status_code)
         );
 
@@ -169,6 +177,10 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "read_file_at",
+            file_id = file_id,
+            communication = format!("{:?}", communication),
+            offset = offset,
+            length = length,
             status_code = format!("{:?}", status_code)
         );
 
@@ -225,6 +237,10 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "write_file_at",
+            file_id = file_id,
+            communication = format!("{:?}", communication),
+            offset = offset,
+            data = hex::encode(data),
             status_code = format!("{:?}", status_code)
         );
 
@@ -280,6 +296,7 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "get_file_settings",
+            file_id = file_id,
             status_code = format!("{:?}", status_code)
         );
 
@@ -341,6 +358,10 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "create_file",
+            file_id = file_id,
+            communication = format!("{:?}", communication),
+            permissions = format!("{:?}", permissions),
+            size = size,
             status_code = format!("{:?}", status_code)
         );
 
@@ -365,6 +386,7 @@ where
         #[cfg(feature = "tracing")]
         tracing::debug!(
             method = "delete_file",
+            file_id = file_id,
             status_code = format!("{:?}", status_code)
         );
 
