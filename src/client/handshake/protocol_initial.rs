@@ -38,6 +38,9 @@ where
         output[1] = key_id;
         let command = &output[..2];
 
+        #[cfg(feature = "tracing")]
+        tracing::trace!("authentication initiated");
+
         (
             Self {
                 keying: Scheme::<KEY_SIZE, AlgorithmT>::new(key),
@@ -112,6 +115,13 @@ where
             let rnd_b: [u8; KEY_SIZE] = rnd_b.try_into().unwrap();
             rnd_b
         };
+
+        #[cfg(feature = "tracing")]
+        tracing::trace!(
+            rnd_a = format!("{:02x?}", rnd_a),
+            rnd_b = format!("{:02x?}", rnd_b),
+            "RndB challange, half-open"
+        );
 
         let command = &mut output[..(KEY_SIZE * 2) + 1];
         command[0] = Instruction::AdditionalData as u8;

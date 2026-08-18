@@ -76,6 +76,12 @@ where
 
         let session_key = (rnd_a, rnd_b).derive();
 
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            session_key = format!("{:02x?}", session_key),
+            "authentication successful",
+        );
+
         Ok(Handshake {
             keying: Scheme::<KEY_SIZE, AlgorithmT>::new(session_key),
             state: Successful,
