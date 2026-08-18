@@ -19,8 +19,8 @@
 // THE SOFTWARE. }}}
 
 use crate::{
-    AuthenticationState, Card, CardIoDefault, Error, Instruction, KeyCount, KeyId, Permissions,
-    StatusCode, io,
+    Authenticated, AuthenticationState, Card, CardIoDefault, Error, Instruction, KeyCount, KeyId,
+    Permissions, Session, StatusCode, command_header, crc32, io,
 };
 
 impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
@@ -79,6 +79,67 @@ where
         }
 
         Ok(key_version)
+    }
+}
+
+impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+where
+    IoBackendT: io::Backend,
+    Self: CardIoDefault<IoBackendT>,
+{
+    /// Set the key settings for an application. This can be used to lock
+    /// the door behind you after changing keys, etc.
+    pub async fn set_key_settings(
+        &mut self,
+        permissions: Permissions,
+    ) -> Result<(), Error<IoBackendT::Error>> {
+        let header: [u8; 1] = command_header!({
+            instruction: Instruction = Instruction::ChangeKeySettings
+        }, 1);
+
+        let permissions: &[u8] = &[permissions.as_u8()?][..];
+        let crc = crc32(&header, &[permissions]).to_le_bytes();
+
+        let (status_code, response) = match &mut self.authentication.session {
+            Session::Aes { keying, .. } => {
+                io::encrypted_out_cmac_in(
+                    &self.card,
+                    keying,
+                    &mut self.buf,
+                    &header,
+                    &[permissions, &crc],
+                )
+                .await?
+            }
+            Session::Des { keying, .. } => {
+                io::encrypted_out_cmac_in(
+                    &self.card,
+                    keying,
+                    &mut self.buf,
+                    &header,
+                    &[permissions, &crc],
+                )
+                .await?
+            }
+        };
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            method = "set_key_settings",
+            permissions = format!("{:?}", permissions),
+            crc = crc,
+            status_code = format!("{:?}", status_code)
+        );
+
+        if status_code != StatusCode::Ack {
+            return Err(Error::BadStatusCode(status_code));
+        }
+
+        if !response.is_empty() {
+            return Err(Error::BadSize);
+        };
+
+        Ok(())
     }
 }
 

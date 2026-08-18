@@ -36,9 +36,9 @@ pub enum Instruction {
     /// Get key settings for the open Application
     GetKeySettings = 0x45,
 
-    // /// Change the key for a specific key slot.
-    // ChangeKeySettings = 0x54,
-    //
+    /// Change the key for a specific key slot.
+    ChangeKeySettings = 0x54,
+
     /// Get the key version for a Key ID
     GetKeyVersion = 0x64,
 
