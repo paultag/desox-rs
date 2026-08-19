@@ -55,7 +55,6 @@ replay!(application, "application.replay", |card| {
         .unwrap();
 
     let (permissions, key_count) = card.get_key_settings().await.unwrap();
-
     assert_eq!(
         Permissions {
             app: AppPermissions {
@@ -71,6 +70,34 @@ replay!(application, "application.replay", |card| {
     assert_eq!(KeyCount::Aes(1), key_count);
     assert_eq!(0, card.get_key_version(0x00).await.unwrap());
     assert_eq!(0, card.list_files(&mut out).await.unwrap().len());
+
+    {
+        let key_settings = Permissions {
+            app: AppPermissions {
+                can_change_key_settings: false,
+                can_change_root_key: false,
+                anyone_can_delete: false,
+                anyone_can_list: false,
+            },
+            key: KeyPermissions::RequiresRoot,
+        };
+        card.set_key_settings(key_settings).await.unwrap();
+    }
+
+    let (permissions, key_count) = card.get_key_settings().await.unwrap();
+    assert_eq!(
+        Permissions {
+            app: AppPermissions {
+                can_change_key_settings: false,
+                can_change_root_key: false,
+                anyone_can_delete: false,
+                anyone_can_list: false
+            },
+            key: KeyPermissions::RequiresRoot
+        },
+        permissions
+    );
+    assert_eq!(KeyCount::Aes(1), key_count);
 
     let card = card.select_application([0, 0, 0]).await.unwrap();
     let mut card = card
