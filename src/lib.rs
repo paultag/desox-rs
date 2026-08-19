@@ -76,7 +76,6 @@ use card::{
     command, command_cmac_de_minimis, command_de_minimis, command_encrypted_request_de_minimis,
     command_encrypted_response, command_encrypted_response_de_minimis, command_header,
 };
-use card_default::CardIoDefault;
 use copy_to_slice::CopyToSlice;
 use crc::crc32;
 use padding::Padding;
@@ -86,6 +85,7 @@ pub(crate) use handshake::AuthenticateExt;
 
 pub use card::{AuthenticationState, Card};
 pub use card_authenticated::Authenticated;
+pub use card_default::CardIoDefault;
 pub use card_unauthenticated::Unauthenticated;
 pub use cmd_file_data::FileIo;
 pub use error::Error;
