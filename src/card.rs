@@ -141,7 +141,7 @@ pub(super) use command_header;
 pub trait AuthenticationState {}
 
 /// Handle to interact with a MiFare DESFire card.
-pub struct Card<'card, IoBackendT, AuthenticationStateT>
+pub struct Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
@@ -156,22 +156,21 @@ where
     pub(super) buf: [u8; 60],
 
     pub(super) application_id: ApplicationId,
-    pub(super) card: &'card IoBackendT,
+    pub(super) card: IoBackendT,
     pub(super) authentication: AuthenticationStateT,
 }
 
-impl<'card, AuthenticationStateT, IoBackendT> AsRef<IoBackendT>
-    for Card<'card, IoBackendT, AuthenticationStateT>
+impl<AuthenticationStateT, IoBackendT> AsRef<IoBackendT> for Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
 {
     fn as_ref(&self) -> &IoBackendT {
-        self.card
+        &self.card
     }
 }
 
-impl<'card, AuthenticationStateT, IoBackendT> Card<'card, IoBackendT, AuthenticationStateT>
+impl<AuthenticationStateT, IoBackendT> Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,

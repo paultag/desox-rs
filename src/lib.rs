@@ -100,10 +100,10 @@ pub use status_code::StatusCode;
 pub use version_info::{DetailedVersionInfo, VersionInfo};
 
 /// Type alias for a card which is currently unauthenticated.
-pub type UnauthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Unauthenticated>;
+pub type UnauthenticatedCard<IoBackend> = Card<IoBackend, Unauthenticated>;
 
 /// Type alias for a card which is currently authenticated.
-pub type AuthenticatedCard<'card, IoBackend> = Card<'card, IoBackend, Authenticated>;
+pub type AuthenticatedCard<IoBackend> = Card<IoBackend, Authenticated>;
 
 /// MIFARE DESFire Cards all have a Unique ID ([Uid]). UIDs are 7 bytes long,
 /// and are generally only readable after authentication.

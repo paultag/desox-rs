@@ -23,7 +23,7 @@ use crate::{
     FileSettings, FileType, Instruction, StatusCode, U24, command, command_de_minimis, io,
 };
 
-impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
+impl<IoBackendT, AuthenticationStateT> Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,

@@ -27,7 +27,7 @@ pub struct Unauthenticated;
 
 impl AuthenticationState for Unauthenticated {}
 
-impl<'card, IoBackendT> CardIoDefault<IoBackendT> for Card<'card, IoBackendT, Unauthenticated>
+impl<IoBackendT> CardIoDefault<IoBackendT> for Card<IoBackendT, Unauthenticated>
 where
     IoBackendT: io::Backend,
 {
@@ -49,12 +49,12 @@ where
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Unauthenticated>
+impl<IoBackendT> Card<IoBackendT, Unauthenticated>
 where
     IoBackendT: io::Backend,
 {
     /// Create a new [Card].
-    pub fn new(card: &'card IoBackendT) -> Self {
+    pub fn new(card: IoBackendT) -> Self {
         Self {
             card,
             buf: [0; 60],

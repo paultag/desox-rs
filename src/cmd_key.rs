@@ -23,7 +23,7 @@ use crate::{
     Permissions, Session, StatusCode, command_header, crc32, io,
 };
 
-impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
+impl<IoBackendT, AuthenticationStateT> Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
@@ -82,7 +82,7 @@ where
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
     Self: CardIoDefault<IoBackendT>,

@@ -24,7 +24,7 @@ use super::{
 };
 use crate::{ApplicationId, Error, Instruction, Key, KeyCount, Permissions, StatusCode, io};
 
-impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
+impl<IoBackendT, AuthenticationStateT> Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
@@ -67,7 +67,7 @@ where
     pub async fn select_application(
         self,
         application_id: ApplicationId,
-    ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+    ) -> Result<Card<IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
         let mut card = self.to_unauthenticated();
 
         let (status_code, response) = command_de_minimis!((&mut card), {
@@ -157,7 +157,7 @@ where
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {

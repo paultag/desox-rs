@@ -23,7 +23,7 @@ use crate::{
     KeyingState, Session, StatusCode, Unauthenticated, command_header, crc32, crypto::xor, io,
 };
 
-impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
+impl<IoBackendT, AuthenticationStateT> Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
@@ -39,7 +39,7 @@ where
         self,
         key_id: KeyId,
         key: Key,
-    ) -> Result<Card<'card, IoBackendT, Authenticated>, Error<IoBackendT::Error>> {
+    ) -> Result<Card<IoBackendT, Authenticated>, Error<IoBackendT::Error>> {
         let session: Session = match key {
             Key::Aes(key) => {
                 let session_key =
@@ -85,7 +85,7 @@ where
         key_id: KeyId,
         key: Key,
         rnd_a: Key,
-    ) -> Result<Card<'card, IoBackendT, Authenticated>, Error<IoBackendT::Error>> {
+    ) -> Result<Card<IoBackendT, Authenticated>, Error<IoBackendT::Error>> {
         let session: Session = match (rnd_a, key) {
             (Key::Aes(rnd_a), Key::Aes(key)) => {
                 let session_key = AuthenticateExt::<16, aes::Aes128>::authenticate_with_rnd_a(
@@ -134,7 +134,7 @@ where
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {
@@ -143,7 +143,7 @@ where
         mut self,
         new_key: Key,
         new_key_version: u8,
-    ) -> Result<Card<'card, IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
+    ) -> Result<Card<IoBackendT, Unauthenticated>, Error<IoBackendT::Error>> {
         let mut key_id = self.authentication.session.get_key_id();
 
         let Self {

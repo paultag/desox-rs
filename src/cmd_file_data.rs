@@ -27,7 +27,7 @@ use crate::{
 /// Trait to handle file i/o (be it authenticated or not!) -- this is a trait
 /// because the specific way we talk to a file changes depending on
 /// authentication.
-pub trait FileIo<'card, IoBackendT>
+pub trait FileIo<IoBackendT>
 where
     IoBackendT: io::Backend,
 {
@@ -51,7 +51,7 @@ where
     ) -> impl Future<Output = Result<(), Error<IoBackendT::Error>>>;
 }
 
-impl<'card, IoBackendT> FileIo<'card, IoBackendT> for Card<'card, IoBackendT, Unauthenticated>
+impl<IoBackendT> FileIo<IoBackendT> for Card<IoBackendT, Unauthenticated>
 where
     IoBackendT: io::Backend,
 {
@@ -137,7 +137,7 @@ where
     }
 }
 
-impl<'card, IoBackendT> FileIo<'card, IoBackendT> for Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> FileIo<IoBackendT> for Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {

@@ -23,7 +23,7 @@ use crate::{
     command_encrypted_response_de_minimis, io,
 };
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {

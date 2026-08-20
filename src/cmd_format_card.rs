@@ -20,7 +20,7 @@
 
 use crate::{Authenticated, Card, CardIoDefault, Error, Instruction, StatusCode, io};
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {

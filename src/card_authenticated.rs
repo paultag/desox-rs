@@ -40,7 +40,7 @@ impl Authenticated {
 
 impl AuthenticationState for Authenticated {}
 
-impl<'card, IoBackendT> CardIoDefault<IoBackendT> for Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> CardIoDefault<IoBackendT> for Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {
@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<'card, IoBackendT> Card<'card, IoBackendT, Authenticated>
+impl<IoBackendT> Card<IoBackendT, Authenticated>
 where
     IoBackendT: io::Backend,
 {
@@ -86,7 +86,7 @@ where
     }
 }
 
-impl<'card, IoBackendT, AuthenticationStateT> Card<'card, IoBackendT, AuthenticationStateT>
+impl<IoBackendT, AuthenticationStateT> Card<IoBackendT, AuthenticationStateT>
 where
     AuthenticationStateT: AuthenticationState,
     IoBackendT: io::Backend,
@@ -95,7 +95,7 @@ where
     /// card state -- this is only useful if you (the user) know you did
     /// something that caused you to be "logged out" that the type system
     /// didn't account for.
-    pub fn to_unauthenticated(self) -> Card<'card, IoBackendT, Unauthenticated> {
+    pub fn to_unauthenticated(self) -> Card<IoBackendT, Unauthenticated> {
         let Self {
             card,
             buf,
@@ -103,7 +103,7 @@ where
             authentication: _,
         } = self;
 
-        Card::<'card, IoBackendT, Unauthenticated> {
+        Card::<IoBackendT, Unauthenticated> {
             card,
             buf,
             application_id,
