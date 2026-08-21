@@ -36,14 +36,14 @@ where
     /// card in order to establish a shared session key state to encrypt or
     /// sign messages.
     pub async fn authenticate(
-        self,
+        mut self,
         key_id: KeyId,
         key: Key,
     ) -> Result<Card<IoBackendT, Authenticated>, Error<IoBackendT::Error>> {
         let session: Session = match key {
             Key::Aes(key) => {
                 let session_key =
-                    AuthenticateExt::<16, aes::Aes128>::authenticate(&self.card, key_id, key)
+                    AuthenticateExt::<16, aes::Aes128>::authenticate(&mut self.card, key_id, key)
                         .await?;
                 Session::Aes {
                     key_id,
@@ -52,7 +52,8 @@ where
             }
             Key::Des(key) => {
                 let session_key =
-                    AuthenticateExt::<8, des::Des>::authenticate(&self.card, key_id, key).await?;
+                    AuthenticateExt::<8, des::Des>::authenticate(&mut self.card, key_id, key)
+                        .await?;
                 Session::Des {
                     key_id,
                     keying: KeyingState::<8, des::Des>::new(session_key),
@@ -81,7 +82,7 @@ where
     /// You should basically never use this, and this may even go away in a
     /// future release (or hide it behind a feature).
     pub async fn authenticate_with_rnd_a(
-        self,
+        mut self,
         key_id: KeyId,
         key: Key,
         rnd_a: Key,
@@ -89,7 +90,7 @@ where
         let session: Session = match (rnd_a, key) {
             (Key::Aes(rnd_a), Key::Aes(key)) => {
                 let session_key = AuthenticateExt::<16, aes::Aes128>::authenticate_with_rnd_a(
-                    &self.card,
+                    &mut self.card,
                     key_id,
                     key,
                     Some(rnd_a),
@@ -102,7 +103,7 @@ where
             }
             (Key::Des(rnd_a), Key::Des(key)) => {
                 let session_key = AuthenticateExt::<8, des::Des>::authenticate_with_rnd_a(
-                    &self.card,
+                    &mut self.card,
                     key_id,
                     key,
                     Some(rnd_a),
@@ -147,7 +148,7 @@ where
         let mut key_id = self.authentication.session.get_key_id();
 
         let Self {
-            card,
+            mut card,
             buf,
             application_id,
             mut authentication,
@@ -205,10 +206,10 @@ where
 
         let (status_code, response) = match &mut authentication.session {
             Session::Aes { keying, .. } => {
-                io::encrypted_out_plain_in(&card, keying, &mut self.buf, &header, data).await?
+                io::encrypted_out_plain_in(&mut card, keying, &mut self.buf, &header, data).await?
             }
             Session::Des { keying, .. } => {
-                io::encrypted_out_plain_in(&card, keying, &mut self.buf, &header, data).await?
+                io::encrypted_out_plain_in(&mut card, keying, &mut self.buf, &header, data).await?
             }
         };
 
@@ -279,7 +280,7 @@ where
             (Session::Aes { keying, .. }, Key::Aes(key)) => {
                 let crc = crc32(&header, &[&key, &[new_key_version]]).to_le_bytes();
                 io::encrypted_out_cmac_in(
-                    &self.card,
+                    &mut self.card,
                     keying,
                     &mut self.buf,
                     &header,
@@ -290,7 +291,7 @@ where
             (Session::Des { keying, .. }, Key::Des(key)) => {
                 let crc = crc32(&header, &[&key]).to_le_bytes();
                 io::encrypted_out_cmac_in(
-                    &self.card,
+                    &mut self.card,
                     keying,
                     &mut self.buf,
                     &header,

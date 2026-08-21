@@ -103,7 +103,7 @@ where
         let (status_code, response) = match &mut self.authentication.session {
             Session::Aes { keying, .. } => {
                 io::encrypted_out_cmac_in(
-                    &self.card,
+                    &mut self.card,
                     keying,
                     &mut self.buf,
                     &header,
@@ -113,7 +113,7 @@ where
             }
             Session::Des { keying, .. } => {
                 io::encrypted_out_cmac_in(
-                    &self.card,
+                    &mut self.card,
                     keying,
                     &mut self.buf,
                     &header,

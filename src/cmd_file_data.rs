@@ -257,9 +257,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_unauth_encrypted_file_read() {
-        let mb = MockBackend::new(&[]);
+        let mut mb = MockBackend::new(&[]);
         let mut out = [0; 0xffff];
-        let mut card = Card::new(&mb);
+        let mut card = Card::new(&mut mb);
 
         assert!(
             card.read_file_at(&mut out, 0x00, FileCommunication::Encrypted, 0, 1024)
@@ -270,8 +270,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_unauth_encrypted_file_write() {
-        let mb = MockBackend::new(&[]);
-        let mut card = Card::new(&mb);
+        let mut mb = MockBackend::new(&[]);
+        let mut card = Card::new(&mut mb);
 
         assert!(
             card.write_file_at(0x00, FileCommunication::Encrypted, 0, b"hack the planet")
@@ -282,8 +282,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_unauth_cmac_file_write() {
-        let mb = MockBackend::new(&[]);
-        let mut card = Card::new(&mb);
+        let mut mb = MockBackend::new(&[]);
+        let mut card = Card::new(&mut mb);
 
         assert!(
             card.write_file_at(0x00, FileCommunication::Cmac, 0, b"hack the planet")

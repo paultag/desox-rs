@@ -23,7 +23,11 @@ use crate::io;
 impl io::Backend for ::pcsc::Card {
     type Error = pcsc::Error;
 
-    async fn exchange_raw(&self, output: &mut [u8], input: &[u8]) -> Result<usize, pcsc::Error> {
+    async fn exchange_raw(
+        &mut self,
+        output: &mut [u8],
+        input: &[u8],
+    ) -> Result<usize, pcsc::Error> {
         // this should really be done with tokio::task::spawn_blocking but the
         // problem there is that we're operating on refs...
 

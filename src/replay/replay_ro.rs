@@ -30,9 +30,8 @@ macro_rules! replay {
                 .map(|(tx, rx)| (tx.as_slice(), rx.as_slice()))
                 .collect::<Vec<_>>();
 
-            let backend = $crate::io::MockBackend::new(&transcript);
-
-            let $card = $crate::Card::new(&backend);
+            let mut backend = $crate::io::MockBackend::new(&transcript);
+            let $card = $crate::Card::new(&mut backend);
             $body
         }
     };

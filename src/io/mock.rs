@@ -45,7 +45,11 @@ impl<'a> MockBackend<'a> {
 impl<'a> Backend for MockBackend<'a> {
     type Error = Infallible;
 
-    async fn exchange_raw(&self, output: &mut [u8], input: &[u8]) -> Result<usize, Self::Error> {
+    async fn exchange_raw(
+        &mut self,
+        output: &mut [u8],
+        input: &[u8],
+    ) -> Result<usize, Self::Error> {
         let (expected_input, response) = {
             let n = self.step.fetch_add(1, Ordering::SeqCst) as usize;
             let responses = &self.responses[n..];
@@ -76,7 +80,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_mock_backend() {
-        let mb = MockBackend::new(&[(&[0xAF], b"\x00Hello, World!")]);
+        let mut mb = MockBackend::new(&[(&[0xAF], b"\x00Hello, World!")]);
         let mut out = [0; 0xff];
         let n = mb.exchange_raw(&mut out, &[0xAF]).await.unwrap();
         assert_eq!(b"Hello, World!", &out[1..n]);

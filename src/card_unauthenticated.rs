@@ -37,7 +37,7 @@ where
         header: &[u8],
         data: &[&[u8]],
     ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
-        io::plain_multi(&self.card, output, header, data).await
+        io::plain_multi(&mut self.card, output, header, data).await
     }
 
     async fn default_exchange_multi_de_minimis<'a>(
@@ -45,7 +45,7 @@ where
         header: &[u8],
         data: &[&[u8]],
     ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
-        io::plain_multi(&self.card, &mut self.buf, header, data).await
+        io::plain_multi(&mut self.card, &mut self.buf, header, data).await
     }
 }
 

@@ -54,7 +54,7 @@ where
     /// 'input' to the backend, and the response bytes will be written to
     /// 'output'. The number of bytes written to `output` will be returned.
     fn exchange_raw(
-        &self,
+        &mut self,
         output: &mut [u8],
         input: &[u8],
     ) -> impl Future<Output = Result<usize, Self::Error>>;
@@ -67,7 +67,7 @@ where
     /// this is likely the method you're looking for.
     #[allow(async_fn_in_trait)]
     async fn exchange<'a>(
-        &self,
+        &mut self,
         output: &'a mut [u8],
         input: &[u8],
     ) -> Result<(StatusCode, &'a [u8]), Self::Error> {
@@ -90,22 +90,16 @@ where
     }
 }
 
-impl<T> Backend for &T
-where
-    T: Backend,
-{
-    type Error = T::Error;
-    async fn exchange_raw(&self, output: &mut [u8], input: &[u8]) -> Result<usize, Self::Error> {
-        <T as Backend>::exchange_raw(self, output, input).await
-    }
-}
-
 impl<T> Backend for &mut T
 where
     T: Backend,
 {
     type Error = T::Error;
-    async fn exchange_raw(&self, output: &mut [u8], input: &[u8]) -> Result<usize, Self::Error> {
+    async fn exchange_raw(
+        &mut self,
+        output: &mut [u8],
+        input: &[u8],
+    ) -> Result<usize, Self::Error> {
         <T as Backend>::exchange_raw(self, output, input).await
     }
 }

@@ -52,10 +52,10 @@ where
     ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
         Ok(match &mut self.authentication.session {
             Session::Aes { keying, .. } => {
-                io::plain_out_cmac_in(&self.card, keying, output, header, data).await?
+                io::plain_out_cmac_in(&mut self.card, keying, output, header, data).await?
             }
             Session::Des { keying, .. } => {
-                io::plain_out_cmac_in(&self.card, keying, output, header, data).await?
+                io::plain_out_cmac_in(&mut self.card, keying, output, header, data).await?
             }
         })
     }
@@ -67,10 +67,10 @@ where
     ) -> Result<(StatusCode, &'a [u8]), Error<IoBackendT::Error>> {
         Ok(match &mut self.authentication.session {
             Session::Aes { keying, .. } => {
-                io::plain_out_cmac_in(&self.card, keying, &mut self.buf, header, data).await?
+                io::plain_out_cmac_in(&mut self.card, keying, &mut self.buf, header, data).await?
             }
             Session::Des { keying, .. } => {
-                io::plain_out_cmac_in(&self.card, keying, &mut self.buf, header, data).await?
+                io::plain_out_cmac_in(&mut self.card, keying, &mut self.buf, header, data).await?
             }
         })
     }

@@ -22,7 +22,7 @@ use crate::{Error, KeyingState, StatusCode, crypto, io, std::fmt::Debug};
 
 /// Exchange a CMAC signed message with the Card.
 pub async fn plain_out_cmac_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
     output: &'a mut [u8],
     header: &[u8],
@@ -63,7 +63,7 @@ where
 
 /// Exchange a CMAC signed message with the Card, both out and in.
 pub async fn cmac_out_cmac_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
     output: &'a mut [u8],
     header: &[u8],
@@ -119,14 +119,14 @@ mod tests {
     async fn test_capture_fc() {
         let mut sks = KeyingState::<8, _>::new(hex!("BA 02 0A 16 EC E6 1C 12"));
 
-        let mb = mock_backend!(
+        let mut mb = mock_backend!(
             // format card
             ("FC", "00 A7 0A 5C 88 36 14 1E 82")
         );
 
         let mut output = [0; 0xff];
         let (status_code, response) = plain_out_cmac_in(
-            &mb,
+            &mut mb,
             &mut sks,
             &mut output,
             &[Instruction::FormatCard as u8],
@@ -140,7 +140,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_capture_card_info_over_and_over() {
-        let mb = mock_backend!(
+        let mut mb = mock_backend!(
             // Card is unauthenticated here.
             //
             // Get card info
@@ -184,9 +184,10 @@ mod tests {
         );
 
         let mut output = [0; 0xff];
-        let (status_code, response) = plain(&mb, &mut output, &[Instruction::GetVersionInfo as u8])
-            .await
-            .unwrap();
+        let (status_code, response) =
+            plain(&mut mb, &mut output, &[Instruction::GetVersionInfo as u8])
+                .await
+                .unwrap();
 
         assert_eq!(StatusCode::Ack, status_code);
         assert_eq!(&card_version, response);
@@ -202,7 +203,7 @@ mod tests {
 
         output.fill(0x00);
         let (status_code, response) = plain_out_cmac_in(
-            &mb,
+            &mut mb,
             &mut ks,
             &mut output,
             &[Instruction::GetVersionInfo as u8],

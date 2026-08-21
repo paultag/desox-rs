@@ -30,7 +30,7 @@ use crate::{
 /// We don't pad/unpad in here, since this is technically a higher-level
 /// concern.
 pub async fn plain_out_encrypted_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
     output: &'a mut [u8],
     header: &[u8],
@@ -92,7 +92,7 @@ where
 /// This assumes the header is "in the clear", and the data we're sending
 /// is encrypted. This also assumes a CRC is included.
 pub async fn encrypted_out_plain_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
     output: &'a mut [u8],
     header: &[u8],
@@ -216,7 +216,7 @@ where
 /// This assumes the header is "in the clear", and the data we're sending
 /// is encrypted. This also assumes a CRC is included.
 pub async fn encrypted_out_cmac_in<'a, const KEY_SIZE: usize, BackendT, AlgorithmT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     ks: &mut KeyingState<KEY_SIZE, AlgorithmT>,
     output: &'a mut [u8],
     header: &[u8],
@@ -242,13 +242,18 @@ mod tests {
     async fn test_capture_real_uid() {
         let mut ks = KeyingState::<8, _>::new(hex!("A0 CE B0 F4 08 D4 60 DE"));
 
-        let mb = mock_backend!(("51", "00 50 1F 93 0A 8B 90 A0 80 EC 9F B1 BA 83 89 2E A3"));
+        let mut mb = mock_backend!(("51", "00 50 1F 93 0A 8B 90 A0 80 EC 9F B1 BA 83 89 2E A3"));
 
         let mut output = [0; 0xff];
-        let (status_code, response) =
-            plain_out_encrypted_in(&mb, &mut ks, &mut output, &[Instruction::GetUid as u8], &[])
-                .await
-                .unwrap();
+        let (status_code, response) = plain_out_encrypted_in(
+            &mut mb,
+            &mut ks,
+            &mut output,
+            &[Instruction::GetUid as u8],
+            &[],
+        )
+        .await
+        .unwrap();
         assert_eq!(StatusCode::Ack, status_code);
         assert_eq!(16, response.len());
         assert_eq!(&hex!("04 4B 1F 9A DD 1E 90"), &response[..7]);

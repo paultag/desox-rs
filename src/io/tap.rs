@@ -57,7 +57,11 @@ where
 {
     type Error = IoBackendT::Error;
 
-    async fn exchange_raw(&self, output: &mut [u8], input: &[u8]) -> Result<usize, Self::Error> {
+    async fn exchange_raw(
+        &mut self,
+        output: &mut [u8],
+        input: &[u8],
+    ) -> Result<usize, Self::Error> {
         let n = self.backend.exchange_raw(output, input).await?;
         {
             let mut messages = self.messages.lock().await;

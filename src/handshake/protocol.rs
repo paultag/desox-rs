@@ -53,7 +53,7 @@ where
 {
     /// Do the authentication flow
     fn authenticate_with_rnd_a(
-        &self,
+        &mut self,
         key_id: u8,
         key: [u8; KEY_SIZE],
         rnd_a: Option<[u8; KEY_SIZE]>,
@@ -61,7 +61,7 @@ where
 
     /// Do the authentication flow
     fn authenticate(
-        &self,
+        &mut self,
         key_id: u8,
         key: [u8; KEY_SIZE],
     ) -> impl Future<Output = Result<[u8; KEY_SIZE], Error<<Self as io::Backend>::Error>>> {
@@ -78,7 +78,7 @@ where
     Scheme<KEY_SIZE, AlgorithmT>: Initiate,
 {
     async fn authenticate_with_rnd_a(
-        &self,
+        &mut self,
         key_id: u8,
         key: [u8; KEY_SIZE],
         rnd_a: Option<[u8; KEY_SIZE]>,
@@ -135,7 +135,7 @@ mod tests {
         ) => {
             #[tokio::test]
             async fn $name() {
-                let mb = mock_backend!( $( ($in, $out) ),* );
+                let mut mb = mock_backend!( $( ($in, $out) ),* );
                 let key = mb.authenticate_with_rnd_a(0x00, hex!($key), Some(hex!($rnd_a))).await.unwrap();
                 assert_eq!(hex!($session_key), key);
             }

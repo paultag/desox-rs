@@ -30,7 +30,7 @@ const MAX_SIZE: usize = 59;
 /// until we see the end of the data. If this is not desired, you may
 /// need to interact with the [Backend] directly.
 pub async fn plain<'a, BackendT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     output: &'a mut [u8],
     input: &[u8],
 ) -> Result<(StatusCode, &'a [u8]), Error<BackendT::Error>>
@@ -65,7 +65,7 @@ where
 /// until we see the end of the data. If this is not desired, you may
 /// need to interact with the [Backend] directly.
 pub async fn plain_multi<'a, BackendT>(
-    backend: &BackendT,
+    backend: &mut BackendT,
     output: &'a mut [u8],
     header: &[u8],
     data: &[&[u8]],
@@ -124,9 +124,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_plain() {
-        let mb = MockBackend::new(&[(&[0xFF], b"\xAFHello, "), (&[0xAF], b"\x00World!")]);
+        let mut mb = MockBackend::new(&[(&[0xFF], b"\xAFHello, "), (&[0xAF], b"\x00World!")]);
         let mut out = [0; 0xff];
-        let (status_code, response) = plain(&mb, &mut out, &[0xFF]).await.unwrap();
+        let (status_code, response) = plain(&mut mb, &mut out, &[0xFF]).await.unwrap();
         assert_eq!(StatusCode::Ack, status_code);
         assert_eq!(b"Hello, World!", &response);
     }

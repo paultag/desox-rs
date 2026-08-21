@@ -51,10 +51,10 @@ macro_rules! command_cmac_de_minimis {
 
         match &mut $slf.authentication.session {
             $crate::Session::Aes { keying, .. } => {
-                $crate::io::cmac_out_cmac_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
+                $crate::io::cmac_out_cmac_in(&mut $slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
             },
             $crate::Session::Des { keying, .. } => {
-                $crate::io::cmac_out_cmac_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
+                $crate::io::cmac_out_cmac_in(&mut $slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
             },
         }
     }};
@@ -70,10 +70,10 @@ macro_rules! command_encrypted_request_de_minimis {
         let crc = $crate::crc32(&header, &[ $( $body ),* ]).to_le_bytes();
         match &mut $slf.authentication.session {
             $crate::Session::Aes { keying, .. } => {
-                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body, )* &crc ]).await?
+                $crate::io::encrypted_out_cmac_in(&mut $slf.card, keying, &mut $slf.buf, &header, &[ $( $body, )* &crc ]).await?
             },
             $crate::Session::Des { keying, .. } => {
-                $crate::io::encrypted_out_cmac_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body, )* &crc ]).await?
+                $crate::io::encrypted_out_cmac_in(&mut $slf.card, keying, &mut $slf.buf, &header, &[ $( $body, )* &crc ]).await?
             },
         }
     }};
@@ -88,10 +88,10 @@ macro_rules! command_encrypted_response {
 
         match &mut $slf.authentication.session {
             $crate::Session::Aes { keying, .. } => {
-                $crate::io::plain_out_encrypted_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
+                $crate::io::plain_out_encrypted_in(&mut $slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
             },
             $crate::Session::Des { keying, .. } => {
-                $crate::io::plain_out_encrypted_in(&$slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
+                $crate::io::plain_out_encrypted_in(&mut $slf.card, keying, $out, &header, &[ $( $body ),* ]).await?
             },
         }
     }};
@@ -106,10 +106,10 @@ macro_rules! command_encrypted_response_de_minimis {
 
         match &mut $slf.authentication.session {
             $crate::Session::Aes { keying, .. } => {
-                $crate::io::plain_out_encrypted_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
+                $crate::io::plain_out_encrypted_in(&mut $slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
             },
             $crate::Session::Des { keying, .. } => {
-                $crate::io::plain_out_encrypted_in(&$slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
+                $crate::io::plain_out_encrypted_in(&mut $slf.card, keying, &mut $slf.buf, &header, &[ $( $body ),* ]).await?
             },
         }
     }};

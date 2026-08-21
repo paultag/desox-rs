@@ -198,22 +198,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_free_memory() {
-        let mb = MockBackend::new(&[(&[0x6e], &[0x00, 0x00, 0x04, 0x00])]);
-        let mut card = Card::new(&mb);
+        let mut mb = MockBackend::new(&[(&[0x6e], &[0x00, 0x00, 0x04, 0x00])]);
+        let mut card = Card::new(&mut mb);
         assert_eq!(1024, card.get_free_memory().await.unwrap());
     }
 
     #[tokio::test]
     async fn test_free_memory_sc() {
-        let mb = MockBackend::new(&[(&[0x6e], &[0xae])]);
-        let mut card = Card::new(&mb);
+        let mut mb = MockBackend::new(&[(&[0x6e], &[0xae])]);
+        let mut card = Card::new(&mut mb);
         assert!(card.get_free_memory().await.is_err());
     }
 
     #[tokio::test]
     async fn test_free_memory_short() {
-        let mb = MockBackend::new(&[(&[0x6e], &[0x00])]);
-        let mut card = Card::new(&mb);
+        let mut mb = MockBackend::new(&[(&[0x6e], &[0x00])]);
+        let mut card = Card::new(&mut mb);
         assert!(card.get_free_memory().await.is_err());
     }
 }
