@@ -20,7 +20,6 @@
 
 use super::Backend;
 use crate::std::vec::Vec;
-use tokio::sync::Mutex;
 
 /// The [TapBackend] wraps another [Backend] and stores the messages for
 /// replay later.
@@ -30,7 +29,7 @@ where
     IoBackendT: Backend,
 {
     backend: IoBackendT,
-    messages: Mutex<Vec<(Vec<u8>, Vec<u8>)>>,
+    messages: Vec<(Vec<u8>, Vec<u8>)>,
 }
 
 impl<IoBackendT> TapBackend<IoBackendT>
@@ -41,13 +40,13 @@ where
     pub fn new(backend: IoBackendT) -> Self {
         Self {
             backend,
-            messages: Mutex::new(Vec::new()),
+            messages: Vec::new(),
         }
     }
 
     /// Consume the [TapBackend] and return the logged messages.
     pub fn into_inner(self) -> Vec<(Vec<u8>, Vec<u8>)> {
-        self.messages.into_inner()
+        self.messages
     }
 }
 
@@ -63,10 +62,7 @@ where
         input: &[u8],
     ) -> Result<usize, Self::Error> {
         let n = self.backend.exchange_raw(output, input).await?;
-        {
-            let mut messages = self.messages.lock().await;
-            messages.push((input.to_vec(), output[..n].to_vec()));
-        }
+        self.messages.push((input.to_vec(), output[..n].to_vec()));
         Ok(n)
     }
 }
