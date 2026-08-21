@@ -67,7 +67,6 @@ mod permissions;
 mod replay;
 mod session;
 mod status_code;
-mod transport_backend;
 mod u24;
 mod version_info;
 
@@ -98,7 +97,6 @@ pub use keying::KeyingState;
 pub use permissions::{AppPermissions, KeyPermissions, Permissions};
 pub use session::Session;
 pub use status_code::StatusCode;
-pub use transport_backend::TransportBackend;
 pub use version_info::{DetailedVersionInfo, VersionInfo};
 
 /// Type alias for a card which is currently unauthenticated.
