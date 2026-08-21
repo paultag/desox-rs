@@ -81,7 +81,7 @@ replay!(application, "application.replay", |card| {
             },
             key: KeyPermissions::RequiresRoot,
         };
-        card.set_key_settings(key_settings).await.unwrap();
+        card.change_key_settings(key_settings).await.unwrap();
     }
 
     let (permissions, key_count) = card.get_key_settings().await.unwrap();

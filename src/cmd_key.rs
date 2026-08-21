@@ -89,7 +89,7 @@ where
 {
     /// Set the key settings for an application. This can be used to lock
     /// the door behind you after changing keys, etc.
-    pub async fn set_key_settings(
+    pub async fn change_key_settings(
         &mut self,
         permissions: Permissions,
     ) -> Result<(), Error<IoBackendT::Error>> {
@@ -125,7 +125,7 @@ where
 
         #[cfg(feature = "tracing")]
         tracing::debug!(
-            method = "set_key_settings",
+            method = "change_key_settings",
             permissions = format!("{:?}", permissions),
             crc = hex::encode(crc),
             status_code = format!("{:?}", status_code)
