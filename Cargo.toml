@@ -13,7 +13,8 @@ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(desox_replay_rw)'] }
 [features]
 default = []
 pcsc = ["dep:pcsc"]
-tracing = ["dep:tracing", "std", "dep:hex"]
+tracing = ["std", "dep:hex", "dep:tracing"]
+insecure-trace-private-keys = ["tracing"]
 std = []
 
 [dependencies]

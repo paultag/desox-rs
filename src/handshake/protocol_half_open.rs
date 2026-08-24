@@ -76,7 +76,7 @@ where
 
         let session_key = (rnd_a, rnd_b).derive();
 
-        #[cfg(feature = "tracing")]
+        #[cfg(feature = "insecure-trace-private-keys")]
         tracing::debug!(
             session_key = hex::encode(session_key),
             "authentication successful",

@@ -36,28 +36,28 @@ macro_rules! impl_crypto_backend {
     ($key_size:literal, $crypto:path, $cmac_type:ident($r_b:literal)) => {
         impl BackendEncryptor<$key_size> for cbc::Encryptor<$crypto> {
             fn encrypt(&mut self, data: &mut [u8]) {
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(data = hex::encode(&data), "encrypting");
                 let (data_chunks, data_leftover) = data.as_chunks_mut::<$key_size>();
                 assert!(data_leftover.is_empty()); // ensure block alignment
                 for data in data_chunks {
                     self.encrypt_block(data.into());
                 }
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(data = hex::encode(&data), "encrypted");
             }
         }
 
         impl BackendDecryptor<$key_size> for cbc::Decryptor<$crypto> {
             fn decrypt(&mut self, data: &mut [u8]) {
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(data = hex::encode(&data), "decrypting");
                 let (data_chunks, data_leftover) = data.as_chunks_mut::<$key_size>();
                 assert!(data_leftover.is_empty()); // ensure block alignment
                 for data in data_chunks {
                     self.decrypt_block(data.into());
                 }
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(data = hex::encode(&data), "decrypted");
             }
         }
@@ -83,13 +83,16 @@ macro_rules! impl_crypto_backend {
             }
 
             fn set_iv(&mut self, iv: [u8; $key_size]) {
-                #[cfg(feature = "tracing")]
+                // not insecure to log this, but it's just noise since
+                // we can't do anything useful with it without the key.
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(iv = hex::encode(iv), "iv updated",);
+
                 self.iv = iv
             }
 
             fn decryptor(&self) -> cbc::Decryptor<$crypto> {
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(
                     key = hex::encode(self.key),
                     iv = hex::encode(self.iv),
@@ -99,7 +102,7 @@ macro_rules! impl_crypto_backend {
             }
 
             fn encryptor(&self) -> cbc::Encryptor<$crypto> {
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(
                     key = hex::encode(self.key),
                     iv = hex::encode(self.iv),
@@ -123,7 +126,7 @@ macro_rules! impl_crypto_backend {
                 let mut k2 = k1;
                 shift_xor(&mut k2);
 
-                #[cfg(feature = "tracing")]
+                #[cfg(feature = "insecure-trace-private-keys")]
                 tracing::trace!(
                     k1 = hex::encode(k1),
                     k2 = hex::encode(k2),

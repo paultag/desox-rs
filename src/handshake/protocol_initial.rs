@@ -116,7 +116,7 @@ where
             rnd_b
         };
 
-        #[cfg(feature = "tracing")]
+        #[cfg(feature = "insecure-trace-private-keys")]
         tracing::trace!(
             rnd_a = hex::encode(rnd_a),
             rnd_b = hex::encode(rnd_b),

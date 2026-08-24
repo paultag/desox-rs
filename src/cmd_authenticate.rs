@@ -213,7 +213,7 @@ where
             }
         };
 
-        #[cfg(feature = "tracing")]
+        #[cfg(feature = "insecure-trace-private-keys")]
         tracing::debug!(
             method = "change_current_key",
             key_id = key_id,
